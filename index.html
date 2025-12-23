@@ -388,7 +388,7 @@
             const { setActivePage, user, theme } = useMarket();
             // Generate dynamic Redirect URI for GitHub Pages compatibility
             const redirectUri = window.location.origin + window.location.pathname;
-            const discordLoginUrl = `https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify`;
+            const discordLoginUrl = `https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=code&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2Fauth%2Fdiscord&scope=identify`;
 
             return (
                 <nav className="container mx-auto px-6 py-6 flex justify-between items-center relative z-20">
@@ -883,7 +883,7 @@
         const Home = () => {
             const { loginWithSteam, isLoading, setActivePage, user } = useMarket();
             const redirectUri = window.location.origin + window.location.pathname;
-            const discordLoginUrl = `https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify`;
+            const discordLoginUrl = `https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=code&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2Fauth%2Fdiscord&scope=identify`;
             
             return (
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme flex flex-col relative">
