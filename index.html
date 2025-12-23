@@ -386,12 +386,6 @@
 
         const NavBar = () => {
             const { setActivePage, user, theme } = useMarket();
-            
-            // --- UPDATED HARDCODED URL FOR GITHUB PAGES ---
-            // Using 'token' response type because this is a client-side app (hash parsing).
-            // Redirecting to root /PourMonBae/ because that is where index.html lives.
-            const discordLoginUrl = "https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2F&scope=identify";
-
             return (
                 <nav className="container mx-auto px-6 py-6 flex justify-between items-center relative z-20">
                     <div onClick={() => setActivePage(user ? 'DASHBOARD' : 'HOME')}><Logo /></div>
@@ -408,7 +402,7 @@
                                 Dashboard
                             </button>
                         ) : (
-                            <a href={discordLoginUrl} 
+                            <a href="https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=code&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2Fauth%2Fdiscord&scope=identify" 
                                className="bg-discord-blue text-white px-5 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-opacity-90 transition-all">
                                 <i className="fa-brands fa-discord"></i><span>Connexion</span>
                             </a>
@@ -884,8 +878,6 @@
 
         const Home = () => {
             const { loginWithSteam, isLoading, setActivePage, user } = useMarket();
-            const redirectUri = window.location.origin + window.location.pathname;
-            const discordLoginUrl = "https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2F&scope=identify";
             
             return (
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme flex flex-col relative">
@@ -912,7 +904,7 @@
                                     <button onClick={loginWithSteam} disabled={isLoading} className="bg-dark-900 text-white px-6 py-4 rounded-xl font-bold flex items-center gap-3 hover:bg-dark-800 transition-colors shadow-lg border border-gray-700">
                                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-brands fa-steam text-xl"></i>} Steam
                                     </button>
-                                    <a href={discordLoginUrl} className="bg-discord-blue text-white px-6 py-4 rounded-xl font-bold flex items-center gap-3 hover:opacity-90 transition-colors shadow-lg">
+                                    <a href="https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=code&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2Fauth%2Fdiscord&scope=identify" className="bg-discord-blue text-white px-6 py-4 rounded-xl font-bold flex items-center gap-3 hover:opacity-90 transition-colors shadow-lg">
                                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-brands fa-discord text-xl"></i>} Discord
                                     </a>
                                     </>
