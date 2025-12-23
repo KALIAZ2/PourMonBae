@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
 
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script
     <script>
       tailwind.config = {
         darkMode: 'class', // Enable class-based dark mode
@@ -402,7 +402,7 @@
                                 Dashboard
                             </button>
                         ) : (
-                            <a href="https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=http%3A%2F%2Flocalhost%3A53134&scope=identify" 
+                            <a href="https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=code&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2F&scope=identify" 
                                className="bg-discord-blue text-white px-5 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-opacity-90 transition-all">
                                 <i className="fa-brands fa-discord"></i><span>Connexion</span>
                             </a>
@@ -904,7 +904,7 @@
                                     <button onClick={loginWithSteam} disabled={isLoading} className="bg-dark-900 text-white px-6 py-4 rounded-xl font-bold flex items-center gap-3 hover:bg-dark-800 transition-colors shadow-lg border border-gray-700">
                                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-brands fa-steam text-xl"></i>} Steam
                                     </button>
-                                    <a href="https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=http%3A%2F%2Flocalhost%3A53134&scope=identify" className="bg-discord-blue text-white px-6 py-4 rounded-xl font-bold flex items-center gap-3 hover:opacity-90 transition-colors shadow-lg">
+                                    <a href="https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=code&redirect_uri=https%3A%2F%2Fkaliaz2.github.io%2FPourMonBae%2F&scope=identify" className="bg-discord-blue text-white px-6 py-4 rounded-xl font-bold flex items-center gap-3 hover:opacity-90 transition-colors shadow-lg">
                                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-brands fa-discord text-xl"></i>} Discord
                                     </a>
                                     </>
