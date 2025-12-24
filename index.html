@@ -32,6 +32,10 @@
                 500: '#f59e0b',
                 600: '#d97706',
               },
+              christmas: {
+                red: '#ef4444',
+                green: '#10b981',
+              },
               dark: {
                 950: '#020617', // Main bg dark
                 900: '#0f172a', // Secondary bg dark
@@ -48,10 +52,11 @@
             animation: {
               'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'spin-slow': 'spin 3s linear infinite',
-              'fade-in': 'fadeIn 0.3s ease-out',
-              'slide-up': 'slideUp 0.4s ease-out',
-              'slide-up-fade': 'slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-              'scale-in': 'scaleIn 0.2s ease-out',
+              'fade-in': 'fadeIn 0.5s ease-out',
+              'slide-up': 'slideUp 0.6s ease-out',
+              'slide-up-fade': 'slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)',
+              'scale-in': 'scaleIn 0.4s ease-out',
+              'float': 'float 6s ease-in-out infinite',
             },
             keyframes: {
                 fadeIn: {
@@ -59,16 +64,20 @@
                     '100%': { opacity: '1' },
                 },
                 slideUp: {
-                    '0%': { transform: 'translateY(20px)', opacity: '0' },
-                    '100%': { transform: 'translateY(0)', opacity: '1' },
-                },
-                slideUpFade: {
                     '0%': { transform: 'translateY(30px)', opacity: '0' },
                     '100%': { transform: 'translateY(0)', opacity: '1' },
                 },
+                slideUpFade: {
+                    '0%': { transform: 'translateY(40px)', opacity: '0' },
+                    '100%': { transform: 'translateY(0)', opacity: '1' },
+                },
                 scaleIn: {
-                    '0%': { transform: 'scale(0.95)', opacity: '0' },
+                    '0%': { transform: 'scale(0.92)', opacity: '0' },
                     '100%': { transform: 'scale(1)', opacity: '1' },
+                },
+                float: {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-10px)' },
                 }
             }
           },
@@ -92,13 +101,13 @@
     <style>
       /* Smooth transitions for theme switching */
       body {
-        transition: background-color 0.3s ease, color 0.3s ease;
-        overflow-x: hidden; /* Prevent horizontal scroll on mobile */
+        transition: background-color 0.5s ease, color 0.5s ease;
+        overflow-x: hidden;
       }
       .transition-theme {
-        transition-property: background-color, border-color, color, fill, stroke;
+        transition-property: background-color, border-color, color, fill, stroke, transform, opacity;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 300ms;
+        transition-duration: 500ms;
       }
       
       ::-webkit-scrollbar {
@@ -116,7 +125,6 @@
         background: #64748b; 
       }
 
-      /* Neon Glow for Candlesticks */
       .bullish-candle {
         filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.3));
       }
@@ -129,15 +137,72 @@
           user-select: none;
           pointer-events: none;
       }
+
+      .garland-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 40px;
+        z-index: 5;
+        overflow: hidden;
+        pointer-events: none;
+        display: flex;
+        justify-content: space-around;
+      }
+      .garland-bulb {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          margin-top: -6px;
+          animation: swing 3s ease-in-out infinite;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      }
+      .garland-bulb:nth-child(odd) { background-color: #ef4444; animation-duration: 3.5s; }
+      .garland-bulb:nth-child(even) { background-color: #10b981; animation-duration: 2.5s; }
+      .garland-bulb:nth-child(3n) { background-color: #f59e0b; }
       
-      /* Mobile optimization */
+      @keyframes swing {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(3px) rotate(5deg); }
+      }
+      
+      .btn-hover {
+          transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .btn-hover:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 10px 20px -10px rgba(0,0,0,0.3);
+          filter: brightness(1.1);
+      }
+      .btn-hover:active {
+          transform: translateY(0) scale(0.98);
+      }
+
+      .reveal {
+          opacity: 0;
+          transform: translateY(40px);
+          transition: all 1s cubic-bezier(0.5, 0, 0, 1);
+      }
+      .reveal.active {
+          opacity: 1;
+          transform: translateY(0);
+      }
+
+      .reveal.delay-100 { transition-delay: 0.1s; }
+      .reveal.delay-200 { transition-delay: 0.2s; }
+      .reveal.delay-300 { transition-delay: 0.3s; }
+
+      .animate-float {
+          animation: float 6s ease-in-out infinite;
+      }
+
       @media (max-width: 768px) {
         .recharts-wrapper {
             font-size: 10px;
         }
       }
 
-      /* Glassmorphism utility */
       .glass-panel {
           background: rgba(255, 255, 255, 0.05);
           backdrop-filter: blur(10px);
@@ -157,7 +222,7 @@
         // --- 1. GLOBALS & IMPORTS ---
         const { useState, useEffect, createContext, useContext, useMemo, useRef } = React;
         const RechartsObj = window.Recharts;
-        const { BarChart, Bar, AreaChart, Area, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie } = RechartsObj || {};
+        const { BarChart, Bar, AreaChart, Area, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Legend } = RechartsObj || {};
 
         // --- 1.1 HOOKS ---
         const useMediaQuery = (query) => {
@@ -170,6 +235,27 @@
                 return () => window.removeEventListener("resize", listener);
             }, [matches, query]);
             return matches;
+        };
+
+        const useScrollReveal = (deps = []) => {
+            useEffect(() => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                            observer.unobserve(entry.target); 
+                        }
+                    });
+                }, { 
+                    threshold: 0.1,
+                    rootMargin: "0px 0px -50px 0px"
+                });
+                
+                const elements = document.querySelectorAll('.reveal');
+                elements.forEach(el => observer.observe(el));
+                
+                return () => observer.disconnect();
+            }, deps);
         };
 
         // --- 2. ICONS ---
@@ -200,6 +286,11 @@
         const Settings = (props) => (<Icon {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></Icon>);
         const Info = (props) => (<Icon {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></Icon>);
         const Gift = (props) => (<Icon {...props}><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></Icon>);
+        const FileText = (props) => (<Icon {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></Icon>);
+        const Plus = (props) => (<Icon {...props}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>);
+        const Minus = (props) => (<Icon {...props}><line x1="5" y1="12" x2="19" y2="12"/></Icon>);
+        const Snowflake = (props) => (<Icon {...props}><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/></Icon>);
+        const Wallet = (props) => (<Icon {...props}><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></Icon>);
 
         const SteamIcon = () => (<i className="fa-brands fa-steam text-xl"></i>);
 
@@ -226,7 +317,6 @@
         };
 
         // --- 4. ENGINE ---
-        // NEW: OHLC Simulation
         const simulateMarketUpdate = (currentMarket) => {
             return currentMarket.map((asset) => {
                 if (asset.symbol === CryptoSymbol.UDC) return asset;
@@ -234,18 +324,16 @@
                 const lastPoint = asset.history[asset.history.length - 1];
                 const open = lastPoint ? lastPoint.close : asset.price;
                 
-                // Max 2% move for the candle close
                 const change = (Math.random() - 0.5) * 0.02 * open;
                 const close = Math.max(0.1, open + change);
                 
-                // High/Low within 0.5% of the outer bounds
                 const high = Math.max(open, close) + Math.random() * 0.005 * open;
                 const low = Math.min(open, close) - Math.random() * 0.005 * open;
                 
                 const newCandle = { 
                     time: new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'}), 
                     open, close, high, low,
-                    price: close // Backward compatibility
+                    price: close 
                 };
                 
                 const newHistory = [...asset.history, newCandle];
@@ -265,8 +353,90 @@
             const suffix = Math.floor(1000 + Math.random() * 9000); 
             return `${base}${suffix}`;
         };
+        
+        const SnowEffect = ({ enabled }) => {
+            const canvasRef = useRef(null);
+            
+            useEffect(() => {
+                if (!enabled) return;
+                
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                let width = window.innerWidth;
+                let height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
 
-        // --- 5. CONTEXT ---
+                const particles = [];
+                const particleCount = 100;
+
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        radius: Math.random() * 3 + 1,
+                        density: Math.random() * particleCount,
+                        speed: Math.random() * 1 + 0.5
+                    });
+                }
+
+                let animationFrameId;
+
+                const draw = () => {
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                    ctx.beginPath();
+                    
+                    for (let i = 0; i < particleCount; i++) {
+                        const p = particles[i];
+                        ctx.moveTo(p.x, p.y);
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, true);
+                    }
+                    ctx.fill();
+                    update();
+                    animationFrameId = requestAnimationFrame(draw);
+                };
+
+                const update = () => {
+                    for (let i = 0; i < particleCount; i++) {
+                        const p = particles[i];
+                        p.y += p.speed; // Move down
+                        p.x += Math.sin(p.density); // Sway effect
+
+                        // Reset if off screen
+                        if (p.y > height) {
+                            particles[i] = {
+                                x: Math.random() * width,
+                                y: -10,
+                                radius: p.radius,
+                                density: p.density,
+                                speed: p.speed
+                            };
+                        }
+                    }
+                };
+
+                draw();
+
+                const handleResize = () => {
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                    canvas.width = width;
+                    canvas.height = height;
+                };
+
+                window.addEventListener('resize', handleResize);
+
+                return () => {
+                    cancelAnimationFrame(animationFrameId);
+                    window.removeEventListener('resize', handleResize);
+                };
+            }, [enabled]);
+
+            if (!enabled) return null;
+            return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-[1]" />;
+        };
+
         const MarketContext = createContext(undefined);
 
         const MarketProvider = ({ children }) => {
@@ -274,14 +444,27 @@
             const [user, setUser] = useState(null); 
             const [allUsers, setAllUsers] = useState([]); 
             const [transactions, setTransactions] = useState([]);
-            const [orders, setOrders] = useState([]); // { id, symbol, type: 'TP'|'SL', triggerPrice, qty }
+            const [orders, setOrders] = useState([]); 
             const [activePage, setActivePage] = useState('HOME');
             const [theme, setTheme] = useState('dark');
             const [isLoading, setIsLoading] = useState(false);
             const [isAdmin, setIsAdmin] = useState(false);
             const [isProfileOpen, setProfileOpen] = useState(false);
+            const [adminLogs, setAdminLogs] = useState([]);
             
-            // Refs for simulation loop to access fresh state
+            const [isChristmas, setIsChristmas] = useState(() => {
+                const saved = localStorage.getItem('xaluxa_christmas');
+                return saved !== 'false';
+            });
+
+            const toggleChristmasMode = () => {
+                setIsChristmas(prev => {
+                    const newVal = !prev;
+                    localStorage.setItem('xaluxa_christmas', newVal);
+                    return newVal;
+                });
+            };
+            
             const marketRef = useRef(market);
             const userRef = useRef(user);
             const ordersRef = useRef(orders);
@@ -330,6 +513,10 @@
                 }));
                 const savedDb = localStorage.getItem('xaluxa_db');
                 if (savedDb) setAllUsers(JSON.parse(savedDb));
+                
+                const savedLogs = localStorage.getItem('xaluxa_admin_logs');
+                if (savedLogs) setAdminLogs(JSON.parse(savedLogs));
+
                 setTransactions([
                     { type: 'BUY', symbol: 'ATERIS', qty: 0.012, price: 71000, time: '10:23' },
                     { type: 'SELL', symbol: 'BASTRUM', qty: 5.4, price: 2300, time: '09:45' },
@@ -502,6 +689,50 @@
                 setAllUsers(prev => prev.map(u => u.id === updatedUserObj.id ? updatedUserObj : u));
             };
 
+            const manageUserMoney = (targetUserId, amount, type, reason) => {
+                if (!isAdmin) return { s: false, m: "Non autorisé" };
+                const targetUser = allUsers.find(u => u.id === targetUserId);
+                if (!targetUser) return { s: false, m: "Utilisateur introuvable" };
+
+                const oldBalance = targetUser.wallet.cash;
+                let newBalance = oldBalance;
+
+                if (type === 'ADD') newBalance += amount;
+                if (type === 'REMOVE') {
+                    if (oldBalance < amount) return { s: false, m: "Solde insuffisant pour ce retrait." };
+                    newBalance -= amount;
+                }
+
+                const logEntry = {
+                    id: Date.now(),
+                    adminId: 'Admin (You)', 
+                    targetUserId: targetUser.id,
+                    targetUsername: targetUser.discord?.username || targetUser.steam?.username || 'Unknown',
+                    action: type,
+                    amount: amount,
+                    balanceBefore: oldBalance,
+                    balanceAfter: newBalance,
+                    reason: reason,
+                    timestamp: new Date().toLocaleString('fr-FR'),
+                    ip: '127.0.0.1' 
+                };
+
+                const newUserState = { ...targetUser, wallet: { ...targetUser.wallet, cash: newBalance } };
+                
+                updateUserInDb(newUserState);
+                
+                const newLogs = [logEntry, ...adminLogs];
+                setAdminLogs(newLogs);
+                localStorage.setItem('xaluxa_admin_logs', JSON.stringify(newLogs));
+                
+                if (user && user.id === targetUserId) {
+                    setUser(newUserState);
+                    localStorage.setItem('xaluxa_user', JSON.stringify(newUserState));
+                }
+
+                return { s: true, m: "Transaction effectuée avec succès." };
+            };
+
             const linkSteam = async () => {
                 setIsLoading(true);
                 setTimeout(() => {
@@ -545,14 +776,11 @@
                 return false;
             };
 
-            // SIMULATION LOOP WITH AUTOMATION CHECK
             useEffect(() => {
                 const interval = setInterval(() => {
-                    // 1. Update prices
                     const newMarket = simulateMarketUpdate(marketRef.current);
                     setMarket(newMarket);
 
-                    // 2. Check Automation (Premium Only)
                     const currentUser = userRef.current;
                     const currentOrders = ordersRef.current;
 
@@ -561,7 +789,6 @@
                         let updatedUser = { ...currentUser };
                         let remainingOrders = [...currentOrders];
 
-                        // Check each order against new prices
                         const triggeredIndices = [];
                         
                         remainingOrders.forEach((order, index) => {
@@ -569,20 +796,15 @@
                             if (!asset) return;
 
                             let triggered = false;
-                            // Take Profit: Sell if Price >= Target
                             if (order.type === 'TP' && asset.price >= order.triggerPrice) triggered = true;
-                            // Stop Loss: Sell if Price <= Target
                             if (order.type === 'SL' && asset.price <= order.triggerPrice) triggered = true;
 
                             if (triggered) {
-                                // Execute Sell logic directly (duplicate logic of sellAsset to avoid async issues/deps)
                                 const heldQty = updatedUser.wallet.assets[order.symbol] || 0;
-                                // We can only sell what we have. If order asks for more, sell max.
                                 const qtyToSell = Math.min(order.qty, heldQty);
                                 
                                 if (qtyToSell > 0) {
                                     const val = qtyToSell * asset.price;
-                                    // 0 fees for premium
                                     updatedUser.wallet.cash += val;
                                     updatedUser.wallet.assets[order.symbol] -= qtyToSell;
                                     
@@ -600,8 +822,6 @@
                         });
 
                         if (ordersTriggered) {
-                            // Remove executed orders
-                            // Filter out indices that were triggered
                             const nextOrders = remainingOrders.filter((_, i) => !triggeredIndices.includes(i));
                             updatedUser.activeOrders = nextOrders;
                             
@@ -623,17 +843,14 @@
                 const asset = market.find(a => a.symbol === s);
                 if(user.wallet.cash < amt) return {s:false, m:'Fonds insuffisants'};
                 
-                // FEE LOGIC
                 const feeRate = user.isPremium ? 0 : FEES.BUY;
                 const tax = amt * feeRate; 
                 const netInvested = amt - tax;
                 const qty = netInvested / asset.price;
                 
-                // Add orders if any
                 const newOrders = [...orders];
                 if (user.isPremium && autoOrders.length > 0) {
                     autoOrders.forEach(o => {
-                        // o = { type: 'TP', percent: 20 }
                         const triggerPrice = o.type === 'TP' 
                             ? asset.price * (1 + o.percent / 100)
                             : asset.price * (1 - o.percent / 100);
@@ -643,7 +860,7 @@
                             symbol: s,
                             type: o.type,
                             triggerPrice,
-                            qty: qty // Sell the amount we just bought
+                            qty: qty
                         });
                     });
                 }
@@ -670,7 +887,6 @@
                 const asset = market.find(a => a.symbol === s);
                 if((user.wallet.assets[s]||0) < qty) return {s:false, m:'Pas assez d\'actifs'};
                 
-                // FEE LOGIC
                 const grossVal = qty * asset.price;
                 const feeRate = user.isPremium ? 0 : FEES.SELL;
                 const tax = grossVal * feeRate; 
@@ -699,7 +915,6 @@
                 setUser(newUser); 
                 localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
                 
-                // FEE LOGIC
                 const feeRate = user.isPremium ? 0 : FEES.TRANSFER;
                 const fee = amt * feeRate; 
                 
@@ -731,61 +946,102 @@
             };
 
             return (
-                <MarketContext.Provider value={{ market, user, transactions, allUsers, orders, isLoading, activePage, theme, isAdmin, isProfileOpen, toggleProfile, linkSteam, loginWithSteam, adminLogin, toggleTheme, setActivePage, logout, buyAsset, sellAsset, transferCash, getPortfolioValue, applyReferralCode, claimReferralEarnings, generateMyReferralCode, upgradeToPremium }}>
+                <MarketContext.Provider value={{ market, user, transactions, allUsers, orders, isLoading, activePage, theme, isAdmin, adminLogs, isProfileOpen, toggleProfile, linkSteam, loginWithSteam, adminLogin, toggleTheme, setActivePage, logout, buyAsset, sellAsset, transferCash, getPortfolioValue, applyReferralCode, claimReferralEarnings, generateMyReferralCode, upgradeToPremium, manageUserMoney, isChristmas, toggleChristmasMode }}>
                     {children}
                 </MarketContext.Provider>
             );
         };
         const useMarket = () => useContext(MarketContext);
 
-        // --- 6. COMMON COMPONENTS ---
-
-        const Logo = ({ size = 'md' }) => (
-            <div className="flex items-center gap-2 font-bold tracking-wider select-none cursor-pointer">
-                <div className="relative flex items-center justify-center">
-                    <Activity className={`text-gold-500 ${size === 'lg' ? 'w-10 h-10' : 'w-6 h-6'}`} />
-                    <TrendingUp className={`absolute -top-1 -right-1 text-emerald-500 ${size === 'lg' ? 'w-6 h-6' : 'w-4 h-4'}`} />
+        const Logo = ({ size = 'md' }) => {
+            const { isChristmas } = useMarket();
+            return (
+                <div className="flex items-center gap-2 font-bold tracking-wider select-none cursor-pointer relative btn-hover">
+                     {isChristmas && (
+                        <div className="absolute -top-3 -left-2 transform -rotate-12 pointer-events-none animate-float">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C8 2 5 5 5 9C5 13 8 16 12 16C16 16 19 13 19 9C19 5 16 2 12 2Z" fill="#EF4444"/> 
+                                <path d="M5 9C5 9.5 5 10.5 5 10.5C3.5 10.5 2 9.5 2 9C2 8.5 3.5 7.5 5 7.5" fill="white"/>
+                                <circle cx="2" cy="9" r="2" fill="white"/>
+                                <rect x="5" y="8" width="14" height="3" fill="white" rx="1"/>
+                            </svg>
+                        </div>
+                    )}
+                    <div className="relative flex items-center justify-center">
+                        <Activity className={`text-gold-500 ${size === 'lg' ? 'w-10 h-10' : 'w-6 h-6'}`} />
+                        <TrendingUp className={`absolute -top-1 -right-1 text-emerald-500 ${size === 'lg' ? 'w-6 h-6' : 'w-4 h-4'}`} />
+                    </div>
+                    <div className={`flex flex-col leading-none`}>
+                        <span className={`${size==='sm'?'text-lg':'text-2xl'} dark:text-white text-dark-950 transition-theme`}>XALUXA</span>
+                        <span className={`text-[0.6rem] tracking-[0.2em] uppercase ${isChristmas ? 'text-christmas-red' : 'text-gold-500'}`}>Agency</span>
+                    </div>
                 </div>
-                <div className={`flex flex-col leading-none`}>
-                    <span className={`${size==='sm'?'text-lg':'text-2xl'} dark:text-white text-dark-950 transition-theme`}>XALUXA</span>
-                    <span className="text-[0.6rem] text-gold-500 tracking-[0.2em] uppercase">Agency</span>
-                </div>
-            </div>
-        );
+            );
+        };
 
         const ThemeToggle = () => {
-            const { theme, toggleTheme } = useMarket();
+            const { theme, toggleTheme, isChristmas, toggleChristmasMode } = useMarket();
             return (
-                <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-800 transition-all text-gold-500 dark:text-gold-400">
-                    {theme === 'dark' ? <Sun /> : <Moon />}
-                </button>
+                <div className="flex gap-2">
+                    <button 
+                        onClick={toggleChristmasMode} 
+                        className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-800 transition-all btn-hover ${isChristmas ? 'text-christmas-red bg-christmas-red/10' : 'text-gray-400'}`} 
+                        title={isChristmas ? "Désactiver Mode Noël" : "Activer Mode Noël"}
+                    >
+                        <Gift size={20} />
+                    </button>
+                    <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-dark-800 transition-all text-gold-500 dark:text-gold-400 btn-hover">
+                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
+                </div>
+            );
+        };
+
+        const AdminAccessButton = () => {
+            const { setActivePage } = useMarket();
+            return (
+                <div className="fixed bottom-4 left-4 z-50 opacity-20 hover:opacity-100 transition-opacity duration-300">
+                    <button 
+                        onClick={() => setActivePage('ADMIN_LOGIN')} 
+                        className="p-3 bg-dark-800 text-white rounded-full shadow-lg border border-dark-700 hover:scale-110 transition-transform"
+                        title="Accès Admin"
+                    >
+                        <ShieldAlert size={20} />
+                    </button>
+                </div>
             );
         };
 
         const NavBar = () => {
-            const { setActivePage, user, theme } = useMarket();
+            const { setActivePage, user, theme, isChristmas } = useMarket();
             const redirectUri = window.location.origin + window.location.pathname;
             const discordLoginUrl = `https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify`;
 
             return (
                 <nav className="container mx-auto px-6 py-6 flex justify-between items-center relative z-20">
+                     {isChristmas && (
+                        <div className="garland-container">
+                             {[...Array(20)].map((_, i) => <div key={i} className="garland-bulb"></div>)}
+                        </div>
+                    )}
                     <div onClick={() => setActivePage(user ? 'DASHBOARD' : 'HOME')}><Logo /></div>
                     <div className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-wider dark:text-gray-400 text-gray-600 transition-theme">
-                        <button onClick={() => setActivePage('HOME')} className="hover:text-gold-500 transition-colors">Accueil</button>
-                        <button onClick={() => setActivePage('ABOUT')} className="hover:text-gold-500 transition-colors">À Propos</button>
-                        <button onClick={() => setActivePage('FEATURES')} className="hover:text-gold-500 transition-colors">Fonctionnalités</button>
-                        <button onClick={() => setActivePage('TRANSFER')} className="hover:text-gold-500 transition-colors flex items-center gap-1"><Send size={14}/> Virements</button>
-                        <button onClick={() => setActivePage('REFERRAL')} className="hover:text-gold-500 transition-colors flex items-center gap-1"><Users size={14}/> Affiliation</button>
+                        <button onClick={() => setActivePage('HOME')} className="hover:text-gold-500 transition-colors btn-hover">Accueil</button>
+                        <button onClick={() => setActivePage('ABOUT')} className="hover:text-gold-500 transition-colors btn-hover">À Propos</button>
+                        <button onClick={() => setActivePage('FEATURES')} className="hover:text-gold-500 transition-colors btn-hover">Fonctionnalités</button>
+                        {user && <button onClick={() => setActivePage('WALLET')} className="hover:text-gold-500 transition-colors flex items-center gap-1 btn-hover"><Wallet size={14}/> Portefeuille</button>}
+                        <button onClick={() => setActivePage('TRANSFER')} className="hover:text-gold-500 transition-colors flex items-center gap-1 btn-hover"><Send size={14}/> Virements</button>
+                        <button onClick={() => setActivePage('REFERRAL')} className="hover:text-gold-500 transition-colors flex items-center gap-1 btn-hover"><Users size={14}/> Affiliation</button>
                     </div>
                     <div className="flex items-center gap-4">
                         <ThemeToggle />
                         {user ? (
-                            <button onClick={() => setActivePage('DASHBOARD')} className="bg-gold-500 text-white px-4 py-2 rounded font-bold hover:bg-gold-600 transition-all shadow-lg shadow-gold-500/20">
+                            <button onClick={() => setActivePage('DASHBOARD')} className={`text-white px-4 py-2 rounded font-bold hover:opacity-90 transition-all shadow-lg btn-hover ${isChristmas ? 'bg-gradient-to-r from-christmas-red to-christmas-green' : 'bg-gold-500 shadow-gold-500/20'}`}>
                                 Dashboard
                             </button>
                         ) : (
                             <a href={discordLoginUrl} 
-                               className="bg-discord-blue text-white px-5 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-opacity-90 transition-all">
+                               className="bg-discord-blue text-white px-5 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-opacity-90 transition-all btn-hover">
                                 <i className="fa-brands fa-discord"></i><span className="hidden sm:inline">Connexion</span>
                             </a>
                         )}
@@ -801,12 +1057,6 @@
             if (!isOpen || !user) return null;
 
             const netWorth = getPortfolioValue();
-            
-            const data = Object.entries(user.wallet.assets)
-                .map(([symbol, qty]) => ({ name: symbol, value: qty }))
-                .filter(d => d.value > 0);
-            
-            const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#94a3b8'];
             const avatar = user.discord ? user.discord.avatar : (user.steamAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png');
             const username = user.discord ? user.discord.username : (user.steamName || 'User');
 
@@ -835,7 +1085,7 @@
 
                         {!user.isPremium && (
                             <div className="mb-6">
-                                <button onClick={handleUpgrade} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all">
+                                <button onClick={handleUpgrade} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all btn-hover">
                                     <Crown size={18} /> Devenir Premium (${PREMIUM_COST.toLocaleString()})
                                 </button>
                                 {pMsg && <p className={`text-center text-xs mt-2 font-bold ${pMsg.s ? 'text-emerald-500' : 'text-rose-500'}`}>{pMsg.m}</p>}
@@ -854,10 +1104,10 @@
                         </div>
 
                          <div className="mb-6 flex gap-2">
-                             <button onClick={() => { setActivePage('REFERRAL'); onClose(); }} className="flex-1 bg-gold-500 hover:bg-gold-600 text-white py-3 rounded-lg font-bold text-sm">
-                                 <Users className="inline mr-2" size={16}/> Affiliation
+                             <button onClick={() => { setActivePage('WALLET'); onClose(); }} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-bold text-sm btn-hover">
+                                 <Wallet className="inline mr-2" size={16}/> Portefeuille
                              </button>
-                             <button onClick={() => { setActivePage('TRANSFER'); onClose(); }} className="flex-1 bg-gray-200 dark:bg-dark-700 hover:bg-gray-300 dark:hover:bg-dark-600 dark:text-white py-3 rounded-lg font-bold text-sm">
+                             <button onClick={() => { setActivePage('TRANSFER'); onClose(); }} className="flex-1 bg-gray-200 dark:bg-dark-700 hover:bg-gray-300 dark:hover:bg-dark-600 dark:text-white py-3 rounded-lg font-bold text-sm btn-hover">
                                  <Send className="inline mr-2" size={16}/> Virements
                              </button>
                          </div>
@@ -899,16 +1149,19 @@
                         </div>
 
                          <div className="flex items-center gap-2 md:gap-6 font-bold text-xs md:text-sm uppercase tracking-wider dark:text-gray-300 text-gray-700">
-                             <button onClick={() => setActivePage('HOME')} className="hidden sm:block hover:text-gold-500 transition-colors">Accueil</button>
-                             <button onClick={() => setActivePage('REFERRAL')} className="hover:text-gold-500 transition-colors flex items-center gap-2">
-                                <Users size={16}/> <span className="hidden sm:inline">Affiliation</span>
+                             <button onClick={() => setActivePage('HOME')} className="hidden sm:block hover:text-gold-500 transition-colors btn-hover">Accueil</button>
+                             <button onClick={() => setActivePage('WALLET')} className="hover:text-gold-500 transition-colors flex items-center gap-2 btn-hover">
+                                <Wallet size={16}/> <span className="hidden sm:inline">Portefeuille</span>
                              </button>
-                             <button onClick={() => setActivePage('TRANSFER')} className="hover:text-gold-500 transition-colors flex items-center gap-2">
+                             <button onClick={() => setActivePage('TRANSFER')} className="hover:text-gold-500 transition-colors flex items-center gap-2 btn-hover">
                                 <Send size={16}/> <span className="hidden sm:inline">Virements</span>
+                             </button>
+                             <button onClick={() => setActivePage('REFERRAL')} className="hover:text-gold-500 transition-colors flex items-center gap-2 btn-hover">
+                                <Users size={16}/> <span className="hidden sm:inline">Affiliation</span>
                              </button>
                              
                              {!user.isPremium && (
-                                 <button onClick={() => toggleProfile(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded shadow-lg shadow-purple-500/30 flex items-center gap-2 transition-transform hover:scale-105 animate-pulse-fast">
+                                 <button onClick={() => toggleProfile(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded shadow-lg shadow-purple-500/30 flex items-center gap-2 transition-transform hover:scale-105 animate-pulse-fast btn-hover">
                                     <Crown size={14}/> <span className="hidden md:inline">Devenir Premium</span>
                                     <span className="md:hidden">Premium</span>
                                  </button>
@@ -917,7 +1170,7 @@
 
                         <div className="flex items-center gap-2">
                             <ThemeToggle />
-                            <button onClick={logout} className="p-2 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors" title="Déconnexion">
+                            <button onClick={logout} className="p-2 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors btn-hover" title="Déconnexion">
                                 <LogOut size={18} />
                             </button>
                         </div>
@@ -928,7 +1181,6 @@
             );
         };
 
-        // NEW: CUSTOM TOOLTIP COMPONENT
         const CustomTooltip = ({ active, payload, label, isMobile }) => {
             const { theme } = useMarket();
             const isDark = theme === 'dark';
@@ -936,7 +1188,6 @@
             if (active && payload && payload.length) {
                 const data = payload[0].payload;
                 
-                // Mobile View Tooltip (Simpler)
                 if (isMobile) {
                     return (
                         <div className={`p-2 rounded shadow-md border text-[10px] font-mono transition-colors duration-200 
@@ -947,7 +1198,6 @@
                     );
                 }
 
-                // Desktop View Tooltip (Detailed)
                 return (
                     <div className={`p-3 rounded-lg shadow-xl border text-xs font-mono transition-colors duration-200 
                         ${isDark ? 'bg-dark-800 border-dark-700 text-white' : 'bg-white border-gray-200 text-gray-800'}`}>
@@ -971,7 +1221,6 @@
             const isMobile = useMediaQuery("(max-width: 768px)");
             const isDark = theme === 'dark';
             
-            // Data Prep
             const data = asset.history.map(h => ({
                 ...h,
                 wick: [h.low, h.high],
@@ -983,12 +1232,11 @@
             const minVal = Math.min(...allValues);
             const maxVal = Math.max(...allValues);
             
-            // Dynamic Padding for Scale (prevents squashing)
-            const padding = (maxVal - minVal) * 0.05; // 5% padding
+            const padding = (maxVal - minVal) * 0.05; 
             const domain = [minVal - padding, maxVal + padding];
 
             return (
-                <div className="bg-white dark:bg-dark-800 rounded-xl p-4 md:p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 md:h-96 flex flex-col transition-theme w-full">
+                <div className="bg-white dark:bg-dark-800 rounded-xl p-4 md:p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 md:h-96 flex flex-col transition-theme w-full reveal delay-100">
                     <div className="flex justify-between items-end mb-4">
                         <div>
                             <h3 className="text-xl md:text-2xl font-bold dark:text-white text-dark-900">{asset.name}</h3>
@@ -1021,7 +1269,6 @@
                                     width={isMobile ? 40 : 60}
                                 />
                                 <Tooltip content={<CustomTooltip isMobile={isMobile} />} cursor={{fill: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'}} />
-                                {/* Wick (Thin Line) */}
                                 <Bar dataKey="wick" barSize={isMobile ? 1 : 2} isAnimationActive={false}>
                                     {data.map((entry, index) => (
                                         <Cell 
@@ -1031,7 +1278,6 @@
                                         />
                                     ))}
                                 </Bar>
-                                {/* Body (Thicker Bar) */}
                                 <Bar dataKey="body" barSize={isMobile ? 6 : 10} isAnimationActive={false}>
                                     {data.map((entry, index) => (
                                         <Cell 
@@ -1053,7 +1299,6 @@
             const [amt, setAmt] = useState('');
             const [msg, setMsg] = useState(null);
             
-            // Automation State
             const [useAuto, setUseAuto] = useState(false);
             const [tp, setTp] = useState('');
             const [sl, setSl] = useState('');
@@ -1081,7 +1326,7 @@
             const fees = user && user.isPremium ? 0 : 2;
 
             return (
-                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-full flex flex-col transition-theme">
+                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-full flex flex-col transition-theme reveal delay-200">
                     <h3 className="text-lg font-bold dark:text-gray-200 text-gray-700 mb-4 uppercase tracking-wide flex justify-between items-center">
                         Passer un ordre
                         {user && user.isPremium && <span className="text-[10px] bg-purple-500 text-white px-2 py-1 rounded">0% FEES</span>}
@@ -1090,7 +1335,6 @@
                     <div className="flex-1 flex flex-col gap-4">
                         <input type="number" placeholder="Quantité ($)" className="w-full bg-gray-100 dark:bg-dark-900 p-4 rounded-lg outline-none focus:ring-2 ring-gold-500 dark:text-white transition-all" value={amt} onChange={e => setAmt(e.target.value)} />
                         
-                        {/* PREMIUM AUTOMATION SECTION */}
                         <div className={`p-4 rounded-lg border transition-all ${user?.isPremium ? 'bg-purple-500/5 border-purple-500/20' : 'bg-gray-100 dark:bg-dark-900 border-transparent opacity-60'}`}>
                             <div className="flex justify-between items-center mb-2">
                                 <label className="flex items-center gap-2 text-xs font-bold uppercase cursor-pointer select-none">
@@ -1128,8 +1372,8 @@
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 mt-auto">
-                            <button onClick={() => exec('BUY')} className="bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-bold transition-all">ACHETER</button>
-                            <button onClick={() => exec('SELL')} className="bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-lg font-bold transition-all">VENDRE</button>
+                            <button onClick={() => exec('BUY')} className="bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-bold transition-all btn-hover">ACHETER</button>
+                            <button onClick={() => exec('SELL')} className="bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-lg font-bold transition-all btn-hover">VENDRE</button>
                         </div>
                         {msg && <div className={`p-2 rounded text-center text-sm ${msg.t==='suc'?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700'}`}>{msg.m}</div>}
                     </div>
@@ -1140,7 +1384,7 @@
         const TransactionHistory = () => {
             const { transactions } = useMarket();
             return (
-                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme">
+                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme reveal delay-300">
                     <div className="flex items-center gap-2 mb-4">
                         <Clock className="text-gray-400" size={20} />
                         <h3 className="text-lg font-bold dark:text-gray-200 text-gray-700 uppercase tracking-wide">Historique</h3>
@@ -1190,7 +1434,7 @@
             const isPremium = user && user.isPremium;
 
             return (
-                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme">
+                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme reveal delay-200">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <Newspaper className="text-gold-500" size={20} />
@@ -1249,7 +1493,7 @@
                 { n: 'BullRun2025', v: '$110k', c: 'text-amber-700' },
             ];
             return (
-                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme">
+                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme reveal">
                     <div className="flex items-center gap-2 mb-4">
                         <Trophy className="text-purple-500" size={20} />
                         <h3 className="text-lg font-bold dark:text-gray-200 text-gray-700 uppercase tracking-wide">Top Traders</h3>
@@ -1274,29 +1518,29 @@
             const [sel, setSel] = useState('ATERIS');
             const asset = market.find(m => m.symbol === sel) || market[0];
             const netWorth = getPortfolioValue();
+            
+            useScrollReveal([user]);
 
             return (
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme pb-20 relative">
                     <DashboardNavBar />
                     <div className="container mx-auto p-4 md:p-6 space-y-6">
-                        
-                        {/* PORTFOLIO STATS (NEW SECTION) */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-white dark:bg-dark-800 p-6 rounded-xl shadow-lg border dark:border-dark-700 border-light-200 flex items-center gap-4">
+                            <div className="bg-white dark:bg-dark-800 p-6 rounded-xl shadow-lg border dark:border-dark-700 border-light-200 flex items-center gap-4 reveal">
                                 <div className="bg-gold-500/10 p-3 rounded-lg text-gold-500"><Briefcase size={24}/></div>
                                 <div>
                                     <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Valeur Nette</div>
                                     <div className="text-2xl font-black dark:text-white text-dark-900">${netWorth.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
                                 </div>
                             </div>
-                            <div className="bg-white dark:bg-dark-800 p-6 rounded-xl shadow-lg border dark:border-dark-700 border-light-200 flex items-center gap-4">
+                            <div className="bg-white dark:bg-dark-800 p-6 rounded-xl shadow-lg border dark:border-dark-700 border-light-200 flex items-center gap-4 reveal delay-100">
                                 <div className="bg-emerald-500/10 p-3 rounded-lg text-emerald-500"><DollarSign size={24}/></div>
                                 <div>
                                     <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Cash Disponible</div>
                                     <div className="text-2xl font-black dark:text-white text-dark-900">${user.wallet.cash.toLocaleString(undefined, {maximumFractionDigits:2})}</div>
                                 </div>
                             </div>
-                             <div className="bg-white dark:bg-dark-800 p-6 rounded-xl shadow-lg border dark:border-dark-700 border-light-200 flex items-center gap-4">
+                             <div className="bg-white dark:bg-dark-800 p-6 rounded-xl shadow-lg border dark:border-dark-700 border-light-200 flex items-center gap-4 reveal delay-200">
                                 <div className="bg-blue-500/10 p-3 rounded-lg text-blue-500"><Layers size={24}/></div>
                                 <div>
                                     <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">Actifs Détenus</div>
@@ -1307,10 +1551,9 @@
                             </div>
                         </div>
 
-                        {/* TICKERS */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {market.map(m => (
-                                <button key={m.symbol} onClick={() => setSel(m.symbol)} className={`p-4 rounded-xl border text-left transition-all ${sel === m.symbol ? 'border-gold-500 bg-white dark:bg-dark-800 shadow-lg ring-1 ring-gold-500' : 'border-transparent bg-white dark:bg-dark-900 hover:bg-gray-50 dark:hover:bg-dark-800'}`}>
+                            {market.map((m, idx) => (
+                                <button key={m.symbol} onClick={() => setSel(m.symbol)} className={`p-4 rounded-xl border text-left transition-all btn-hover reveal delay-${(idx+1)*100} ${sel === m.symbol ? 'border-gold-500 bg-white dark:bg-dark-800 shadow-lg ring-1 ring-gold-500' : 'border-transparent bg-white dark:bg-dark-900 hover:bg-gray-50 dark:hover:bg-dark-800'}`}>
                                     <div className="font-bold text-gray-500 text-xs mb-1 uppercase tracking-tighter">{m.name}</div>
                                     <div className="font-mono font-bold dark:text-white text-dark-900 text-sm md:text-base">${m.price.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
                                     <div className={`text-xs font-bold ${m.change24h>=0?'text-emerald-500':'text-rose-500'}`}>{m.change24h>0?'+':''}{m.change24h.toFixed(2)}%</div>
@@ -1318,9 +1561,8 @@
                             ))}
                         </div>
 
-                        {/* PREMIUM BANNER (IF NOT PREMIUM) */}
                         {!user.isPremium && (
-                            <div className="w-full bg-gradient-to-r from-purple-900 to-indigo-900 rounded-xl p-6 relative overflow-hidden shadow-2xl group cursor-pointer border border-purple-500/30">
+                            <div className="w-full bg-gradient-to-r from-purple-900 to-indigo-900 rounded-xl p-6 relative overflow-hidden shadow-2xl group cursor-pointer border border-purple-500/30 reveal">
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
                                 <div className="absolute -right-10 -top-10 bg-purple-500 w-40 h-40 rounded-full blur-[60px] opacity-40 group-hover:opacity-60 transition-opacity"></div>
                                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1331,27 +1573,26 @@
                                             <p className="text-purple-200 text-sm">0% Fees, Auto-Trading Bot, Future News Access.</p>
                                         </div>
                                     </div>
-                                    <button onClick={() => toggleProfile(true)} className="bg-white text-purple-900 px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors shadow-lg">
+                                    <button onClick={() => toggleProfile(true)} className="bg-white text-purple-900 px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors shadow-lg btn-hover">
                                         Upgrade Now
                                     </button>
                                 </div>
                             </div>
                         )}
 
-                        {/* Responsive Layout for Chart and Trade Panel */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="lg:col-span-2 w-full"><AssetChart asset={asset} /></div>
                             <div className="w-full"><TradePanel asset={asset} /></div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <LeaderboardWidget />
                             <TransactionHistory />
                             <NewsFeed />
                         </div>
                     </div>
                     
-                    <button onClick={() => setActivePage('REFERRAL')} className="fixed bottom-6 right-6 bg-gold-500 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center z-50 hover:scale-110 transition-transform md:hidden">
+                    <button onClick={() => setActivePage('REFERRAL')} className="fixed bottom-6 right-6 bg-gold-500 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center z-50 hover:scale-110 transition-transform md:hidden btn-hover">
                         <Users size={24} />
                     </button>
                 </div>
@@ -1365,12 +1606,35 @@
         );
 
         const ReferralPage = () => {
-            const { user, applyReferralCode, claimReferralEarnings, allUsers, generateMyReferralCode } = useMarket();
+            const { user, applyReferralCode, claimReferralEarnings, allUsers, generateMyReferralCode, setActivePage, isChristmas } = useMarket();
             const [code, setCode] = useState('');
             const [msg, setMsg] = useState(null);
             const [genError, setGenError] = useState(null);
+            
+            useScrollReveal();
 
-            if (!user) return <div className="min-h-screen flex items-center justify-center dark:text-white text-dark-900">Veuillez vous connecter.</div>;
+            if (!user) return (
+                <div className="min-h-screen flex items-center justify-center dark:bg-dark-950 bg-gray-50 flex-col gap-6 p-4 animate-fade-in transition-theme pt-20">
+                    <div className="bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-xl text-center border dark:border-dark-700 max-w-sm w-full relative overflow-hidden">
+                        {isChristmas ? (
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-christmas-red rounded-full blur-[60px] opacity-20"></div>
+                        ) : (
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gold-500 rounded-full blur-[60px] opacity-10"></div>
+                        )}
+                        
+                        <ShieldAlert size={48} className={`${isChristmas ? 'text-christmas-red' : 'text-gold-500'} mx-auto mb-4 relative z-10`} />
+                        <h2 className="text-xl font-bold dark:text-white text-dark-900 mb-2 relative z-10">Accès Restreint</h2>
+                        <p className="text-gray-500 mb-8 text-sm relative z-10">Veuillez vous connecter pour accéder au programme d'affiliation.</p>
+                        
+                        <button 
+                            onClick={() => setActivePage('HOME')} 
+                            className={`w-full text-white py-3.5 rounded-xl font-bold hover:scale-[1.02] transition-transform shadow-lg relative z-10 btn-hover ${isChristmas ? 'bg-gradient-to-r from-christmas-red to-christmas-green' : 'bg-dark-900 dark:bg-white dark:text-dark-900'}`}
+                        >
+                            Retour à l'accueil
+                        </button>
+                    </div>
+                </div>
+            );
 
             const myAffiliates = allUsers.filter(u => u.referredBy === user.id);
             const totalAffiliates = myAffiliates.length;
@@ -1403,9 +1667,8 @@
                 setTimeout(() => setMsg(null), 2000);
             }
 
-            // Stats Card Component
             const StatsCard = ({ title, value, color, icon }) => (
-                <div className="bg-white dark:bg-dark-800 p-6 rounded-2xl border dark:border-dark-700 shadow-xl relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+                <div className="bg-white dark:bg-dark-800 p-6 rounded-2xl border dark:border-dark-700 shadow-xl relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 reveal">
                     <div className={`absolute top-0 right-0 p-4 opacity-10 ${color}`}>
                          {React.cloneElement(icon, { size: 60 })}
                     </div>
@@ -1416,9 +1679,8 @@
                 </div>
             );
 
-            // Step Card Component
             const StepCard = ({ num, title, desc }) => (
-                <div className="flex flex-col items-center text-center p-4">
+                <div className="flex flex-col items-center text-center p-4 reveal">
                     <div className="w-12 h-12 rounded-full bg-dark-900 dark:bg-gold-500 text-white flex items-center justify-center font-bold text-xl mb-4 shadow-lg">
                         {num}
                     </div>
@@ -1440,10 +1702,8 @@
 
                         <div className="grid lg:grid-cols-12 gap-8 mb-16">
                             
-                            {/* LEFT COLUMN: WALLET & STATS */}
                             <div className="lg:col-span-7 space-y-6">
-                                {/* Wallet Card - Premium Look */}
-                                <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden border border-gray-800 h-64 flex flex-col justify-between group">
+                                <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden border border-gray-800 h-64 flex flex-col justify-between group reveal">
                                     <div className="absolute top-0 right-0 w-64 h-64 bg-gold-500 rounded-full blur-[100px] opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
                                     <div className="relative z-10 flex justify-between items-start">
                                         <div>
@@ -1455,24 +1715,21 @@
                                         </div>
                                     </div>
                                     <div className="relative z-10">
-                                         <button onClick={handleClaim} className="w-full bg-gold-500 hover:bg-gold-400 text-black py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-gold-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" disabled={(user.referralWallet || 0) <= 0}>
+                                         <button onClick={handleClaim} className="w-full bg-gold-500 hover:bg-gold-400 text-black py-4 rounded-xl font-bold transition-all shadow-lg hover:shadow-gold-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 btn-hover" disabled={(user.referralWallet || 0) <= 0}>
                                             <Gift size={20}/> Récupérer mes gains
                                         </button>
                                         <div className="text-center mt-3 text-xs text-gray-500">Fonds transférés instantanément vers votre compte principal.</div>
                                     </div>
                                 </div>
 
-                                {/* Stats Grid */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <StatsCard title="Filleuls Actifs" value={totalAffiliates} color="text-blue-500" icon={<Users />} />
                                     <StatsCard title="Gains Totaux" value={`$${(user.totalReferralEarnings || 0).toFixed(2)}`} color="text-emerald-500" icon={<Coins />} />
                                 </div>
                             </div>
 
-                            {/* RIGHT COLUMN: ACTIONS */}
                             <div className="lg:col-span-5 space-y-6">
-                                {/* SHARE CODE SECTION */}
-                                <div className="bg-white dark:bg-dark-800 p-8 rounded-3xl border dark:border-dark-700 shadow-xl relative overflow-hidden">
+                                <div className="bg-white dark:bg-dark-800 p-8 rounded-3xl border dark:border-dark-700 shadow-xl relative overflow-hidden reveal delay-100">
                                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gold-500 to-purple-500"></div>
                                      <h3 className="text-xl font-bold dark:text-white mb-6 flex items-center gap-2"><LinkIcon className="text-gold-500"/> Votre Lien Unique</h3>
                                      
@@ -1494,8 +1751,7 @@
                                     )}
                                 </div>
 
-                                {/* ENTER CODE SECTION */}
-                                <div className="bg-gray-50 dark:bg-dark-900 p-8 rounded-3xl border dark:border-dark-700 shadow-inner">
+                                <div className="bg-gray-50 dark:bg-dark-900 p-8 rounded-3xl border dark:border-dark-700 shadow-inner reveal delay-200">
                                     <h3 className="text-lg font-bold dark:text-white mb-4 flex items-center gap-2">
                                         <PlusCircle className="text-purple-500"/> Rejoindre un parrain
                                     </h3>
@@ -1522,7 +1778,7 @@
                                                 />
                                                 <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20}/>
                                             </div>
-                                            <button onClick={handleApply} className="w-full bg-dark-900 dark:bg-white dark:text-dark-900 text-white py-4 rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-transform">
+                                            <button onClick={handleApply} className="w-full bg-dark-900 dark:bg-white dark:text-dark-900 text-white py-4 rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-transform btn-hover">
                                                 Valider le code
                                             </button>
                                             <p className="text-xs text-center text-gray-400">Bonus de bienvenue : <span className="text-gold-500 font-bold">$100 offerts</span></p>
@@ -1538,7 +1794,6 @@
                             </div>
                         </div>
 
-                        {/* HOW IT WORKS */}
                         <div className="border-t dark:border-dark-800 pt-16">
                              <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                                 <StepCard num="1" title="Partagez" desc="Envoyez votre code unique à vos amis ou sur vos réseaux sociaux." />
@@ -1553,7 +1808,7 @@
         };
 
         const TransferPage = () => {
-            const { user, linkSteam, transferCash, isLoading, setActivePage } = useMarket();
+            const { user, linkSteam, transferCash, isLoading, setActivePage, isChristmas } = useMarket();
             const [dest, setDest] = useState('');
             const [amount, setAmount] = useState('');
             const [msg, setMsg] = useState(null);
@@ -1561,15 +1816,19 @@
             if (!user) return (
                 <div className="min-h-screen flex items-center justify-center dark:bg-dark-950 bg-gray-50 flex-col gap-6 p-4 animate-fade-in transition-theme pt-20">
                     <div className="bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-xl text-center border dark:border-dark-700 max-w-sm w-full relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-gold-500 rounded-full blur-[60px] opacity-10"></div>
+                        {isChristmas ? (
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-christmas-red rounded-full blur-[60px] opacity-20"></div>
+                        ) : (
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gold-500 rounded-full blur-[60px] opacity-10"></div>
+                        )}
                         
-                        <ShieldAlert size={48} className="text-gold-500 mx-auto mb-4 relative z-10" />
+                        <ShieldAlert size={48} className={`${isChristmas ? 'text-christmas-red' : 'text-gold-500'} mx-auto mb-4 relative z-10`} />
                         <h2 className="text-xl font-bold dark:text-white text-dark-900 mb-2 relative z-10">Accès Restreint</h2>
                         <p className="text-gray-500 mb-8 text-sm relative z-10">Veuillez vous connecter via Discord ou Steam pour accéder aux virements.</p>
                         
                         <button 
                             onClick={() => setActivePage('HOME')} 
-                            className="w-full bg-dark-900 dark:bg-white text-white dark:text-dark-900 py-3.5 rounded-xl font-bold hover:scale-[1.02] transition-transform shadow-lg relative z-10"
+                            className={`w-full text-white py-3.5 rounded-xl font-bold hover:scale-[1.02] transition-transform shadow-lg relative z-10 btn-hover ${isChristmas ? 'bg-gradient-to-r from-christmas-red to-christmas-green' : 'bg-dark-900 dark:bg-white dark:text-dark-900'}`}
                         >
                             Retour à l'accueil
                         </button>
@@ -1607,7 +1866,7 @@
                                             Identité Steam requise pour virer des fonds.
                                         </div>
                                     </div>
-                                    <button onClick={linkSteam} disabled={isLoading} className="w-full bg-[#171a21] hover:bg-[#2a475e] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg transition-all">
+                                    <button onClick={linkSteam} disabled={isLoading} className="w-full bg-[#171a21] hover:bg-[#2a475e] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg transition-all btn-hover">
                                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <SteamIcon />}
                                         Lier mon compte Steam
                                     </button>
@@ -1630,7 +1889,7 @@
                                         <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-gray-100 dark:bg-dark-900 p-4 rounded-lg outline-none focus:ring-2 ring-gold-500 dark:text-white" placeholder="0.00" />
                                         <p className="text-xs text-gray-400 mt-2 italic">* <span className={fees === 0 ? "text-emerald-500 font-bold" : "text-rose-500 font-bold"}>{fees}% de frais</span> (impôt système) déduits.</p>
                                     </div>
-                                    <button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg">Confirmer</button>
+                                    <button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg btn-hover">Confirmer</button>
                                     {msg && (
                                         <div className={`p-4 rounded-xl text-center font-bold ${msg.s ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                                             {msg.m}
@@ -1664,7 +1923,7 @@
                             <input type="text" placeholder="Pseudo" className="w-full bg-dark-900 p-3 rounded text-white border border-dark-700" value={u} onChange={e=>setU(e.target.value)} />
                             <input type="password" placeholder="Mot de passe" className="w-full bg-dark-900 p-3 rounded text-white border border-dark-700" value={p} onChange={e=>setP(e.target.value)} />
                             {err && <p className="text-rose-500 text-sm">Erreur d'identifiants.</p>}
-                            <button className="w-full bg-rose-600 hover:bg-rose-700 text-white py-3 rounded font-bold">Connexion</button>
+                            <button className="w-full bg-rose-600 hover:bg-rose-700 text-white py-3 rounded font-bold btn-hover">Connexion</button>
                         </form>
                         <button onClick={() => setActivePage('HOME')} className="mt-4 text-gray-500 text-sm hover:text-white w-full">Retour site</button>
                     </div>
@@ -1673,60 +1932,234 @@
         };
 
         const AdminDashboard = () => {
-            const { isAdmin, allUsers, setActivePage } = useMarket();
+            const { isAdmin, allUsers, setActivePage, manageUserMoney, adminLogs } = useMarket();
+            const [activeTab, setActiveTab] = useState('USERS');
+            const [search, setSearch] = useState('');
             
+            const [modal, setModal] = useState({ open: false, type: 'ADD', user: null });
+            const [amount, setAmount] = useState('');
+            const [reason, setReason] = useState('');
+            const [msg, setMsg] = useState(null);
+
             if(!isAdmin) {
                 setTimeout(() => setActivePage('ADMIN_LOGIN'), 0);
                 return null;
             }
 
+            const filteredUsers = allUsers.filter(u => 
+                (u.discord?.username || '').toLowerCase().includes(search.toLowerCase()) ||
+                u.id.includes(search)
+            );
+
+            const openModal = (type, user) => {
+                setModal({ open: true, type, user });
+                setAmount('');
+                setReason('');
+                setMsg(null);
+            };
+
+            const handleTransaction = (e) => {
+                e.preventDefault();
+                const val = parseFloat(amount);
+                if (isNaN(val) || val <= 0) return setMsg({s:false, m:"Montant invalide"});
+                if (!reason) return setMsg({s:false, m:"Motif requis"});
+
+                const res = manageUserMoney(modal.user.id, val, modal.type, reason);
+                setMsg(res);
+                
+                if (res.s) {
+                    setTimeout(() => setModal({...modal, open: false}), 1500);
+                }
+            };
+
             return (
                 <div className="min-h-screen bg-gray-100 dark:bg-dark-950 transition-theme p-4 md:p-8">
                     <div className="max-w-7xl mx-auto">
-                        <div className="flex justify-between items-center mb-8">
-                            <h1 className="text-2xl md:text-3xl font-bold dark:text-white text-dark-900">Panel Administrateur</h1>
-                            <button onClick={() => setActivePage('HOME')} className="bg-dark-800 text-white px-4 py-2 rounded hover:bg-dark-700">Quitter</button>
-                        </div>
-
-                        <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl overflow-hidden border dark:border-dark-700 border-gray-200">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
-                                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-dark-900 dark:text-gray-400">
-                                        <tr>
-                                            <th className="px-6 py-3">User</th>
-                                            <th className="px-6 py-3">Status</th>
-                                            <th className="px-6 py-3">Referral</th>
-                                            <th className="px-6 py-3">Earnings</th>
-                                            <th className="px-6 py-3">Dates</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {allUsers.map((u, i) => (
-                                            <tr key={i} className="border-b dark:border-dark-700 bg-white dark:bg-dark-800 hover:bg-gray-50 dark:hover:bg-dark-700">
-                                                <td className="px-6 py-4 flex items-center gap-3">
-                                                    <img src={u.discord?.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'} className="w-8 h-8 rounded-full" />
-                                                    <div className="font-bold dark:text-white">{u.discord?.username || 'Unknown'}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {u.isPremium ? <span className="bg-purple-500 text-white px-2 py-1 rounded text-xs">Premium</span> : <span className="bg-gray-500 text-white px-2 py-1 rounded text-xs">Standard</span>}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-xs">Code: <span className="font-mono text-gold-500">{u.referralCode}</span></div>
-                                                    <div className="text-xs">By: {u.referredBy || 'None'}</div>
-                                                </td>
-                                                <td className="px-6 py-4 font-mono text-xs text-emerald-500 font-bold">
-                                                    ${(u.totalReferralEarnings || 0).toFixed(2)}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div>Inscrit: {u.joinedAt ? new Date(u.joinedAt).toLocaleDateString() : 'N/A'}</div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                            <h1 className="text-3xl font-bold dark:text-white text-dark-900 flex items-center gap-3">
+                                <ShieldAlert className="text-rose-500"/> Panel Administrateur
+                            </h1>
+                            <div className="flex gap-4">
+                                <button onClick={() => setActivePage('HOME')} className="bg-dark-800 text-white px-4 py-2 rounded hover:bg-dark-700 transition btn-hover">Quitter</button>
                             </div>
                         </div>
+
+                        <div className="flex space-x-4 border-b border-gray-300 dark:border-dark-700 mb-6">
+                            <button 
+                                onClick={() => setActiveTab('USERS')}
+                                className={`py-2 px-4 font-bold border-b-2 transition-colors ${activeTab === 'USERS' ? 'border-rose-500 text-rose-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                <Users size={18} className="inline mr-2"/> Gestion Utilisateurs
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('LOGS')}
+                                className={`py-2 px-4 font-bold border-b-2 transition-colors ${activeTab === 'LOGS' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                <FileText size={18} className="inline mr-2"/> Logs & Transactions
+                            </button>
+                        </div>
+
+                        {activeTab === 'USERS' && (
+                            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl border dark:border-dark-700 border-gray-200 p-6 animate-fade-in">
+                                <div className="mb-4">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Rechercher par ID ou Username..." 
+                                        className="w-full md:w-1/3 bg-gray-100 dark:bg-dark-900 p-3 rounded-lg border border-transparent focus:border-rose-500 outline-none dark:text-white"
+                                        value={search}
+                                        onChange={e => setSearch(e.target.value)}
+                                    />
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-dark-900 dark:text-gray-400">
+                                            <tr>
+                                                <th className="px-6 py-3">Utilisateur</th>
+                                                <th className="px-6 py-3">Rôle</th>
+                                                <th className="px-6 py-3">Solde Portefeuille</th>
+                                                <th className="px-6 py-3 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredUsers.map((u, i) => (
+                                                <tr key={i} className="border-b dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                                                    <td className="px-6 py-4 flex items-center gap-3">
+                                                        <img src={u.discord?.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'} className="w-10 h-10 rounded-full" />
+                                                        <div>
+                                                            <div className="font-bold dark:text-white text-base">{u.discord?.username || 'Unknown'}</div>
+                                                            <div className="text-xs text-gray-500 font-mono">{u.id}</div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {u.isPremium ? <span className="bg-purple-500/10 text-purple-500 px-2 py-1 rounded border border-purple-500/20 font-bold text-xs">Premium</span> : <span className="bg-gray-500/10 text-gray-500 px-2 py-1 rounded border border-gray-500/20 font-bold text-xs">Standard</span>}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-mono text-emerald-500 font-bold text-lg">${u.wallet.cash.toLocaleString()}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right space-x-2">
+                                                        <button 
+                                                            onClick={() => openModal('ADD', u)}
+                                                            className="bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-lg shadow transition btn-hover"
+                                                            title="Ajouter de l'argent"
+                                                        >
+                                                            <Plus size={16}/>
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => openModal('REMOVE', u)}
+                                                            className="bg-rose-500 hover:bg-rose-600 text-white p-2 rounded-lg shadow transition btn-hover"
+                                                            title="Retirer de l'argent"
+                                                        >
+                                                            <Minus size={16}/>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {filteredUsers.length === 0 && <div className="p-4 text-center text-gray-500">Aucun utilisateur trouvé.</div>}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'LOGS' && (
+                            <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl border dark:border-dark-700 border-gray-200 p-6 animate-fade-in">
+                                <h3 className="text-lg font-bold mb-4 dark:text-white">Historique des transactions Admin</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-dark-900 dark:text-gray-400">
+                                            <tr>
+                                                <th className="px-6 py-3">Date</th>
+                                                <th className="px-6 py-3">Admin</th>
+                                                <th className="px-6 py-3">Action</th>
+                                                <th className="px-6 py-3">Cible</th>
+                                                <th className="px-6 py-3">Montant</th>
+                                                <th className="px-6 py-3">Raison</th>
+                                                <th className="px-6 py-3">Solde (Av. -> Ap.)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {adminLogs.map((log, i) => (
+                                                <tr key={i} className="border-b dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700">
+                                                    <td className="px-6 py-4 whitespace-nowrap">{log.timestamp}</td>
+                                                    <td className="px-6 py-4 font-bold text-gray-600 dark:text-gray-300">{log.adminId}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={`px-2 py-1 rounded text-xs font-bold ${log.action === 'ADD' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                            {log.action}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 font-bold dark:text-white">{log.targetUsername}</td>
+                                                    <td className="px-6 py-4 font-mono font-bold text-gray-800 dark:text-gray-200">${log.amount.toLocaleString()}</td>
+                                                    <td className="px-6 py-4 italic text-xs max-w-xs truncate" title={log.reason}>{log.reason}</td>
+                                                    <td className="px-6 py-4 text-xs font-mono">
+                                                        <span className="opacity-50">${log.balanceBefore.toLocaleString()}</span>
+                                                        <span className="mx-2">➔</span>
+                                                        <span className={log.action === 'ADD' ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}>${log.balanceAfter.toLocaleString()}</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {adminLogs.length === 0 && (
+                                                <tr>
+                                                    <td colSpan="7" className="text-center py-8 text-gray-500">Aucun log disponible.</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Money Modal */}
+                    {modal.open && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+                            <div className="bg-white dark:bg-dark-800 rounded-xl p-6 w-full max-w-sm shadow-2xl relative animate-scale-in border dark:border-dark-700">
+                                <h3 className="text-xl font-bold mb-4 dark:text-white">
+                                    {modal.type === 'ADD' ? <span className="text-emerald-500">Ajouter de l'argent</span> : <span className="text-rose-500">Retirer de l'argent</span>}
+                                </h3>
+                                <p className="text-sm text-gray-500 mb-4">
+                                    Cible : <strong className="dark:text-white">{modal.user?.discord?.username}</strong><br/>
+                                    Solde actuel : <span className="font-mono">${modal.user?.wallet.cash.toLocaleString()}</span>
+                                </p>
+                                
+                                <form onSubmit={handleTransaction} className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Montant ($)</label>
+                                        <input 
+                                            type="number" 
+                                            className="w-full bg-gray-100 dark:bg-dark-900 p-3 rounded-lg outline-none font-bold dark:text-white"
+                                            placeholder="Ex: 5000"
+                                            value={amount}
+                                            onChange={e => setAmount(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Motif (Obligatoire)</label>
+                                        <input 
+                                            type="text" 
+                                            className="w-full bg-gray-100 dark:bg-dark-900 p-3 rounded-lg outline-none text-sm dark:text-white"
+                                            placeholder="Ex: Récompense événement, Correction bug..."
+                                            value={reason}
+                                            onChange={e => setReason(e.target.value)}
+                                        />
+                                    </div>
+                                    
+                                    {msg && (
+                                        <div className={`text-center text-sm font-bold p-2 rounded ${msg.s ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                            {msg.m}
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-3 pt-2">
+                                        <button type="button" onClick={() => setModal({...modal, open: false})} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-dark-700 dark:text-white font-bold hover:bg-gray-300 transition btn-hover">Annuler</button>
+                                        <button className={`px-4 py-2 rounded-lg text-white font-bold transition shadow-lg btn-hover ${modal.type === 'ADD' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'}`}>
+                                            Confirmer
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         };
@@ -1736,12 +2169,14 @@
             const redirectUri = window.location.origin + window.location.pathname;
             const discordLoginUrl = `https://discord.com/oauth2/authorize?client_id=1453040768380833946&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify`;
             
+            useScrollReveal();
+
             return (
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme flex flex-col relative overflow-hidden">
                     <NavBar />
                     
                     <header className="container mx-auto px-6 py-20 flex flex-col lg:flex-row items-center gap-12">
-                        <div className="lg:w-1/2 space-y-6">
+                        <div className="lg:w-1/2 space-y-6 reveal">
                             <span className="text-gold-500 font-bold tracking-widest uppercase text-sm bg-gold-500/10 px-3 py-1 rounded-full">Simulation V2.0</span>
                             <h1 className="text-5xl lg:text-7xl font-black dark:text-white text-dark-900 leading-tight">
                                 Le Trading <br /><span className="text-gold-500">Sans Risque.</span>
@@ -1751,40 +2186,40 @@
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 pt-4">
                                 {user ? (
-                                    <button onClick={() => setActivePage('DASHBOARD')} className="bg-gradient-to-r from-gold-600 to-gold-400 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-3">
+                                    <button onClick={() => setActivePage('DASHBOARD')} className="bg-gradient-to-r from-gold-600 to-gold-400 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-3 btn-hover">
                                         <Activity /> Accéder au Dashboard
                                     </button>
                                 ) : (
                                     <>
-                                    <button onClick={loginWithSteam} disabled={isLoading} className="bg-steam-dark text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-opacity-90 transition-colors shadow-lg border border-gray-700">
+                                    <button onClick={loginWithSteam} disabled={isLoading} className="bg-steam-dark text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-opacity-90 transition-colors shadow-lg border border-gray-700 btn-hover">
                                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <SteamIcon />} Steam
                                     </button>
-                                    <a href={discordLoginUrl} className="bg-discord-blue text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-colors shadow-lg">
+                                    <a href={discordLoginUrl} className="bg-discord-blue text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-colors shadow-lg btn-hover">
                                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-brands fa-discord text-xl"></i>} Discord
                                     </a>
                                     </>
                                 )}
-                                <button onClick={() => setActivePage('REFERRAL')} className="bg-dark-900 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-dark-800 transition-colors shadow-lg border border-gray-700">
+                                <button onClick={() => setActivePage('REFERRAL')} className="bg-dark-900 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-dark-800 transition-colors shadow-lg border border-gray-700 btn-hover">
                                     <Users /> Affiliation
                                 </button>
                             </div>
                         </div>
-                        <div className="lg:w-1/2 relative animate-slide-up hidden md:block">
-                            <div className="absolute inset-0 bg-gradient-to-r from-gold-500 to-purple-600 rounded-full blur-[100px] opacity-20"></div>
-                            <img src="https://images.unsplash.com/photo-1642790106117-e829e14a795f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" className="relative z-10 rounded-3xl shadow-2xl border-4 dark:border-dark-800 border-white transform rotate-2 hover:rotate-0 transition-all duration-500" alt="Trading Dashboard" />
+                        <div className="lg:w-1/2 relative hidden md:block reveal delay-200">
+                            <div className="absolute inset-0 bg-gradient-to-r from-gold-500 to-purple-600 rounded-full blur-[100px] opacity-20 animate-pulse-fast"></div>
+                            <img src="https://images.unsplash.com/photo-1642790106117-e829e14a795f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80" className="relative z-10 rounded-3xl shadow-2xl border-4 dark:border-dark-800 border-white transform rotate-2 hover:rotate-0 transition-all duration-500 hover:scale-[1.02]" alt="Trading Dashboard" />
                         </div>
                     </header>
 
                     <section className="py-20 bg-white dark:bg-dark-900 transition-theme">
                         <div className="container mx-auto px-6">
-                            <h2 className="text-3xl font-bold text-center mb-16 dark:text-white text-dark-900">Comment ça marche ?</h2>
+                            <h2 className="text-3xl font-bold text-center mb-16 dark:text-white text-dark-900 reveal">Comment ça marche ?</h2>
                             <div className="grid md:grid-cols-3 gap-10">
                                 {[
                                     {icon: <Briefcase />, title: "1. Connectez-vous", desc: "Utilisez votre compte Discord pour créer votre portefeuille."},
                                     {icon: <Activity />, title: "2. Analysez", desc: "Suivez les courbes en temps réel des actifs fictifs."},
                                     {icon: <Trophy />, title: "3. Dominez", desc: "Achetez bas, vendez haut et grimpez dans le classement mondial."}
                                 ].map((step, i) => (
-                                    <div key={i} className="text-center group">
+                                    <div key={i} className={`text-center group reveal delay-${(i+1)*100}`}>
                                         <div className="w-20 h-20 mx-auto bg-gray-100 dark:bg-dark-800 rounded-2xl flex items-center justify-center text-gold-500 text-3xl mb-6 group-hover:scale-110 transition-transform shadow-lg">{step.icon}</div>
                                         <h3 className="text-xl font-bold mb-3 dark:text-white text-dark-900">{step.title}</h3>
                                         <p className="text-gray-500 text-sm leading-relaxed">{step.desc}</p>
@@ -1804,11 +2239,12 @@
 
         const Features = () => {
             const { setActivePage } = useMarket();
+            useScrollReveal();
             return (
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme pt-20">
                     <NavBar />
                     <div className="container mx-auto px-6 py-12">
-                        <div className="text-center mb-16">
+                        <div className="text-center mb-16 reveal">
                             <h1 className="text-4xl font-bold dark:text-white text-dark-900 mb-4">Fonctionnalités Avancées</h1>
                             <p className="text-gray-500">Tout ce dont vous avez besoin pour devenir un expert.</p>
                         </div>
@@ -1821,14 +2257,14 @@
                                 {color: 'text-rose-500', icon: <Activity />, t: "Volatilité", d: "Événements de marché aléatoires (Krach, Pump)."},
                                 {color: 'text-indigo-500', icon: <Briefcase />, t: "Portefeuille", d: "Suivi précis des profits et pertes (PnL)."}
                             ].map((f, i) => (
-                                <div key={i} className="bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-lg border dark:border-dark-700 border-gray-100 hover:-translate-y-2 transition-transform">
+                                <div key={i} className={`bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-lg border dark:border-dark-700 border-gray-100 hover:-translate-y-2 transition-transform reveal delay-${(i % 3 + 1)*100}`}>
                                     <div className={`${f.color} mb-4`}>{React.cloneElement(f.icon, {size: 40})}</div>
                                     <h3 className="text-xl font-bold dark:text-white text-dark-900 mb-2">{f.t}</h3>
                                     <p className="text-gray-500 text-sm">{f.d}</p>
                                 </div>
                             ))}
                         </div>
-                        <div className="text-center mt-12">
+                        <div className="text-center mt-12 reveal delay-300">
                             <button onClick={() => setActivePage('HOME')} className="text-gold-500 font-bold hover:underline">Retour à l'accueil</button>
                         </div>
                     </div>
@@ -1838,30 +2274,186 @@
 
         const About = () => {
             const { setActivePage } = useMarket();
+            useScrollReveal();
             return (
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme pt-20">
                     <NavBar />
                     <div className="container mx-auto px-6 py-12 text-center max-w-3xl">
-                        <h1 className="text-4xl font-bold text-gold-500 mb-8">L'histoire de XALUXA</h1>
-                        <div className="bg-white dark:bg-dark-800 p-10 rounded-3xl shadow-xl text-left space-y-6 dark:text-gray-300 text-gray-600 leading-relaxed border dark:border-dark-700 border-gray-100">
+                        <h1 className="text-4xl font-bold text-gold-500 mb-8 reveal">L'histoire de XALUXA</h1>
+                        <div className="bg-white dark:bg-dark-800 p-10 rounded-3xl shadow-xl text-left space-y-6 dark:text-gray-300 text-gray-600 leading-relaxed border dark:border-dark-700 border-gray-100 reveal delay-100">
                             <p>Née de la frustration des plateformes de trading trop complexes, <strong className="text-gold-500">XALUXA AGENCY</strong> a été créée en 2025 pour offrir un terrain de jeu sûr.</p>
                             <p>Notre mission est simple : permettre à n'importe qui, n'importe où, de comprendre les mécanismes financiers sans risquer un seul centime réel.</p>
                             <div className="flex justify-center pt-8 gap-6">
-                                <a href="#" className="text-gray-400 hover:text-discord-blue text-3xl transition-colors"><i className="fa-brands fa-discord"></i></a>
-                                <a href="#" className="text-gray-400 hover:text-black dark:hover:text-white text-3xl transition-colors"><i className="fa-brands fa-github"></i></a>
-                                <a href="#" className="text-gray-400 hover:text-blue-400 text-3xl transition-colors"><i className="fa-brands fa-twitter"></i></a>
+                                <a href="#" className="text-gray-400 hover:text-discord-blue text-3xl transition-colors btn-hover"><i className="fa-brands fa-discord"></i></a>
+                                <a href="#" className="text-gray-400 hover:text-black dark:hover:text-white text-3xl transition-colors btn-hover"><i className="fa-brands fa-github"></i></a>
+                                <a href="#" className="text-gray-400 hover:text-blue-400 text-3xl transition-colors btn-hover"><i className="fa-brands fa-twitter"></i></a>
                             </div>
                         </div>
                     </div>
                 </div>
             );
-        }
+        };
+
+        const WalletPage = () => {
+            const { user, market, getPortfolioValue, transactions } = useMarket();
+            const [actionMsg, setActionMsg] = useState(null);
+            useScrollReveal();
+
+            if (!user) return <div className="p-10 text-center dark:text-white">Veuillez vous connecter.</div>;
+
+            const netWorth = getPortfolioValue();
+            const cash = user.wallet.cash;
+            
+            const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#94a3b8'];
+            const assetData = Object.entries(user.wallet.assets).map(([symbol, qty], index) => {
+                const asset = market.find(m => m.symbol === symbol);
+                const value = qty * (asset ? asset.price : 0);
+                return { name: symbol, value: value, color: COLORS[index % COLORS.length] };
+            }).filter(d => d.value > 1);
+
+            assetData.unshift({ name: 'Cash', value: cash, color: '#10b981' });
+
+            const handleSimulateAction = (type) => {
+                setActionMsg({ type, msg: "Fonctionnalité de démonstration. Utilisez le panneau Admin pour modifier les fonds réels." });
+                setTimeout(() => setActionMsg(null), 4000);
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme pb-20 relative pt-20">
+                    <NavBar />
+                    <div className="container mx-auto px-4 md:px-6 py-8">
+                        <h1 className="text-3xl font-bold mb-8 dark:text-white text-dark-900 reveal">Mon Portefeuille</h1>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                            <div className="lg:col-span-2 bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-xl border dark:border-dark-700 reveal delay-100 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                                    <Wallet size={200} className="text-gold-500" />
+                                </div>
+                                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                    <div>
+                                        <p className="text-gray-500 uppercase tracking-widest text-xs font-bold mb-2">Valeur Totale Estimée</p>
+                                        <h2 className="text-4xl md:text-5xl font-black dark:text-white text-dark-900 mb-2">${netWorth.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
+                                        <div className="flex gap-4 text-sm">
+                                            <span className="text-emerald-500 font-bold bg-emerald-500/10 px-2 py-1 rounded">Cash: ${cash.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                                            <span className="text-blue-500 font-bold bg-blue-500/10 px-2 py-1 rounded">Actifs: ${(netWorth - cash).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => handleSimulateAction('DEPOSIT')} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg btn-hover flex items-center gap-2">
+                                            <PlusCircle size={18} /> Dépôt
+                                        </button>
+                                        <button onClick={() => handleSimulateAction('WITHDRAW')} className="bg-dark-700 hover:bg-dark-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg btn-hover flex items-center gap-2">
+                                            <Minus size={18} /> Retrait
+                                        </button>
+                                    </div>
+                                </div>
+                                {actionMsg && (
+                                    <div className="mt-4 p-3 bg-gray-100 dark:bg-dark-900 rounded-lg text-xs text-center text-gray-500 border border-gray-200 dark:border-dark-700 animate-fade-in">
+                                        {actionMsg.msg}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-xl border dark:border-dark-700 reveal delay-200 flex flex-col items-center justify-center min-h-[300px]">
+                                <h3 className="text-lg font-bold mb-4 dark:text-gray-200 w-full text-left">Répartition</h3>
+                                <ResponsiveContainer width="100%" height={250}>
+                                    <PieChart>
+                                        <Pie
+                                            data={assetData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {assetData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip 
+                                            contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
+                                            itemStyle={{ color: '#fff' }}
+                                            formatter={(value) => `$${value.toLocaleString(undefined, {maximumFractionDigits: 0})}`}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-xl border dark:border-dark-700 reveal delay-300">
+                                <h3 className="text-lg font-bold mb-4 dark:text-gray-200 flex items-center gap-2"><Layers size={18} className="text-gold-500"/> Mes Actifs</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="text-xs text-gray-500 uppercase border-b dark:border-dark-700">
+                                            <tr>
+                                                <th className="py-3">Actif</th>
+                                                <th className="py-3 text-right">Quantité</th>
+                                                <th className="py-3 text-right">Prix Actuel</th>
+                                                <th className="py-3 text-right">Valeur</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="dark:text-gray-300">
+                                            {Object.entries(user.wallet.assets).map(([symbol, qty]) => {
+                                                const mData = market.find(m => m.symbol === symbol);
+                                                const val = qty * (mData ? mData.price : 0);
+                                                if (qty <= 0.0001) return null;
+                                                return (
+                                                    <tr key={symbol} className="border-b dark:border-dark-700 last:border-0 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                                                        <td className="py-3 font-bold">{symbol}</td>
+                                                        <td className="py-3 text-right font-mono">{qty.toFixed(4)}</td>
+                                                        <td className="py-3 text-right text-gray-500">${mData?.price.toLocaleString()}</td>
+                                                        <td className="py-3 text-right font-bold text-emerald-500">${val.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            {Object.values(user.wallet.assets).every(q => q <= 0.0001) && (
+                                                <tr><td colSpan="4" className="py-4 text-center text-gray-500 italic">Aucun actif détenu.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-xl border dark:border-dark-700 reveal delay-300">
+                                <h3 className="text-lg font-bold mb-4 dark:text-gray-200 flex items-center gap-2"><Clock size={18} className="text-blue-500"/> Derniers Mouvements</h3>
+                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                                    {transactions.length === 0 ? (
+                                        <div className="text-center text-gray-500 italic py-8">Aucune transaction.</div>
+                                    ) : (
+                                        transactions.map((t, i) => (
+                                            <div key={i} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-dark-900 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-dark-600 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2 rounded-full ${t.type.includes('BUY') ? 'bg-emerald-500/10 text-emerald-500' : t.type.includes('SELL') ? 'bg-rose-500/10 text-rose-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                                                        {t.type.includes('BUY') ? <Plus size={14}/> : t.type.includes('SELL') ? <Minus size={14}/> : <Send size={14}/>}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold dark:text-white text-xs">{t.type} {t.symbol}</div>
+                                                        <div className="text-[10px] text-gray-500">{t.time}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-mono font-bold dark:text-gray-200 text-sm">{typeof t.qty === 'number' ? t.qty.toFixed(4) : t.qty}</div>
+                                                    <div className="text-[10px] text-gray-500">@ ${t.price.toLocaleString()}</div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const App = () => {
-            const { activePage } = useMarket();
+            const { activePage, isChristmas } = useMarket();
             let Content;
             switch(activePage) {
                 case 'DASHBOARD': Content = <Dashboard />; break;
+                case 'WALLET': Content = <WalletPage />; break;
                 case 'ABOUT': Content = <About />; break;
                 case 'FEATURES': Content = <Features />; break;
                 case 'TRANSFER': Content = <TransferPage />; break;
@@ -1872,9 +2464,13 @@
             }
             
             return (
+                <>
+                <SnowEffect enabled={isChristmas} />
+                <AdminAccessButton />
                 <PageTransition key={activePage}>
                     {Content}
                 </PageTransition>
+                </>
             );
         };
 
