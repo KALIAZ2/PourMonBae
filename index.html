@@ -30,6 +30,7 @@
               'scale-in': 'scaleIn 0.4s ease-out',
               'float': 'float 6s ease-in-out infinite',
               'slide-in-right': 'slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'spin-slow': 'spin 3s linear infinite',
             },
             keyframes: {
                 fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
@@ -73,6 +74,27 @@
       .reveal.delay-200 { transition-delay: 0.2s; }
       .reveal.delay-300 { transition-delay: 0.3s; }
       .animate-float { animation: float 6s ease-in-out infinite; }
+
+      /* Premium Themes */
+      /* Bronze */
+      body.theme-bronze .dark .bg-dark-950 { background-color: #1a1005; }
+      body.theme-bronze .dark .bg-dark-800 { background-color: #2a1b0a; border-color: #d97706; }
+      body.theme-bronze .text-gold-500 { color: #d97706; }
+      
+      /* Silver */
+      body.theme-silver .dark .bg-dark-950 { background-color: #0f172a; }
+      body.theme-silver .dark .bg-dark-800 { background-color: #1e293b; border-color: #94a3b8; }
+      body.theme-silver .text-gold-500 { color: #cbd5e1; }
+      
+      /* Gold (Default enhanced) */
+      body.theme-gold .dark .bg-dark-950 { background-color: #020617; }
+      body.theme-gold .dark .bg-dark-800 { border-color: #f59e0b; }
+      
+      /* Diamond */
+      body.theme-diamond .dark .bg-dark-950 { background-color: #0f051a; }
+      body.theme-diamond .dark .bg-dark-800 { background-color: #1a0b2e; border-color: #a78bfa; }
+      body.theme-diamond .text-gold-500 { color: #a78bfa; }
+      body.theme-diamond .bg-gold-500 { background-color: #8b5cf6; }
     </style>
 </head>
 <body>
@@ -143,6 +165,8 @@
         const Trash = (p) => (<Icon {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></Icon>);
         const ServerIcon = (p) => (<Icon {...p}><rect x="2" y="2" width="20" height="8" rx="2" ry="2" /><rect x="2" y="14" width="20" height="8" rx="2" ry="2" /><line x1="6" y1="6" x2="6.01" y2="6" /><line x1="6" y1="18" x2="6.01" y2="18" /></Icon>);
         const Gamepad = (p) => (<Icon {...p}><line x1="6" x2="10" y1="12" y2="12" /><line x1="8" x2="8" y1="10" y2="14" /><line x1="15" x2="15.01" y1="13" y2="13" /><line x1="18" x2="18.01" y1="11" y2="11" /><rect x="2" y="6" width="20" height="12" rx="2" /></Icon>);
+        const Cpu = (p) => (<Icon {...p}><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" /><line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" /><line x1="20" y1="9" x2="23" y2="9" /><line x1="20" y1="14" x2="23" y2="14" /><line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="14" x2="4" y2="14" /></Icon>);
+        const Settings = (p) => (<Icon {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></Icon>);
 
         // --- CONSTANTS ---
         const CryptoSymbol = { ATERIS: 'ATERIS', BALIEM: 'BALIEM', BASTRUM: 'BASTRUM', UDC: 'UDC' };
@@ -153,17 +177,18 @@
             TRANSFER: 0.01
         };
 
-        const PREMIUM_PLANS = [
-            { id: '1m', label: '1 Mois', cost: 19.99, reward: 40000, duration: 30 * 24 * 60 * 60 * 1000 },
-            { id: '3m', label: '3 Mois', cost: 49.99, reward: 100000, duration: 90 * 24 * 60 * 60 * 1000 },
-            { id: '6m', label: '6 Mois', cost: 89.99, reward: 160000, duration: 180 * 24 * 60 * 60 * 1000 },
+        const PREMIUM_TIERS = [
+            { id: 'bronze', name: 'Bronze', price: 9.99, duration: 30 * 24 * 60 * 60 * 1000, color: 'text-amber-700 border-amber-700 bg-amber-50', badgeColor: 'bg-amber-700 text-amber-100', icon: 'medal', benefits: ['Interface Pro', 'Statistiques de base', 'Accès Standard'] },
+            { id: 'silver', name: 'Silver', price: 19.99, duration: 30 * 24 * 60 * 60 * 1000, color: 'text-slate-500 border-slate-400 bg-slate-50', badgeColor: 'bg-slate-500 text-slate-100', icon: 'medal', benefits: ['Graphiques avancés', 'Support standard', 'News Flash'] },
+            { id: 'gold', name: 'Gold', price: 49.99, duration: 30 * 24 * 60 * 60 * 1000, color: 'text-yellow-600 border-yellow-500 bg-yellow-50', badgeColor: 'bg-yellow-600 text-yellow-100', icon: 'medal', benefits: ['Accès News Futures', 'Outils de dessin', 'Priorité serveurs', 'Historique illimité'] },
+            { id: 'diamond', name: 'Diamond', price: 99.99, duration: 30 * 24 * 60 * 60 * 1000, color: 'text-purple-600 border-purple-500 bg-purple-50', badgeColor: 'bg-purple-600 text-purple-100', icon: 'diamond', benefits: ['Mining Upgrades', 'Support 24/7', 'Badge Exclusif', 'Accès Beta', '0% de frais'] }
         ];
 
-        const MINING_SERVERS = [
-            { id: 's1', name: 'Server Basic', cost: 50000, premium: false },
-            { id: 's2', name: 'Server Advanced', cost: 100000, premium: false },
-            { id: 's3', name: 'Server Elite', cost: 150000, premium: true }
-        ];
+        const MINING_LEVELS = {
+            1: { name: 'BitMiner v1', cost: 50000, rate: 20, sellPrice: 10000 },
+            2: { name: 'BitMiner v2', cost: 75000, rate: 30, sellPrice: 25000 }, 
+            3: { name: 'BitMiner v3 (Max)', cost: 150000, rate: 45, sellPrice: 55000 }
+        };
 
         const INITIAL_MARKET_DATA = [
             { symbol: CryptoSymbol.ATERIS, name: 'Ateris', price: 72500, change24h: 2.5, history: [], color: '#f59e0b', active: true },
@@ -296,6 +321,17 @@
             useEffect(() => { userRef.current = user; }, [user]);
             useEffect(() => { ordersRef.current = orders; }, [orders]);
 
+            // Apply Theme to body
+            useEffect(() => {
+                if (user && user.settings && user.settings.theme) {
+                    // Remove all previous theme classes
+                    document.body.classList.remove('theme-bronze', 'theme-silver', 'theme-gold', 'theme-diamond');
+                    if (user.settings.theme !== 'default') {
+                        document.body.classList.add(`theme-${user.settings.theme}`);
+                    }
+                }
+            }, [user]);
+
             const CLIENT_IP = useMemo(() => {
                 let ip = localStorage.getItem('xaluxa_client_ip');
                 if (!ip) { ip = 'ip_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15); localStorage.setItem('xaluxa_client_ip', ip); }
@@ -365,8 +401,16 @@
                             setUser(updatedUser); updateUserInDb(updatedUser); localStorage.setItem('xaluxa_user', JSON.stringify(updatedUser));
                             addUiNotification({ id: Date.now(), type: 'INFO', sender: 'Système', avatar: 'ADMIN', message: "Serveur arrêté : Taxe impayée" });
                         } else {
-                            const yieldAmount = 50; 
-                            const updatedUser = { ...currentUser, wallet: { ...currentUser.wallet, cash: currentUser.wallet.cash + yieldAmount } };
+                            const level = currentUser.mining.level || 1;
+                            const yieldAmount = MINING_LEVELS[level].rate;
+                            
+                            // Add to Buffer, not wallet directly
+                            const currentBuffer = currentUser.mining.yieldBuffer || 0;
+                            const updatedUser = { 
+                                ...currentUser, 
+                                mining: { ...currentUser.mining, yieldBuffer: currentBuffer + yieldAmount } 
+                            };
+                            
                             setUser(updatedUser); updateUserInDb(updatedUser); localStorage.setItem('xaluxa_user', JSON.stringify(updatedUser));
                         }
                     }
@@ -413,6 +457,12 @@
                     let userState;
                     if (existingUserInDb) {
                         if (!existingUserInDb.internalId) existingUserInDb.internalId = generateInternalId();
+                        // Ensure structure is correct
+                        if (!existingUserInDb.mining) existingUserInDb.mining = { hasServer: false, level: 1, yieldBuffer: 0, isActive: false, nextTaxDue: 0 };
+                        if (existingUserInDb.mining.yieldBuffer === undefined) existingUserInDb.mining.yieldBuffer = 0;
+                        if (!existingUserInDb.settings) existingUserInDb.settings = { theme: 'default', animations: true };
+                        if (!existingUserInDb.premiumTier) existingUserInDb.premiumTier = null;
+
                         userState = { ...existingUserInDb, ...userData, lastLogin: now, ip: CLIENT_IP }; 
                         if(existingUserInDb.activeOrders) setOrders(existingUserInDb.activeOrders);
                     } else {
@@ -421,8 +471,9 @@
                             internalId: generateInternalId(),
                             joinedAt: now, lastLogin: now, ip: CLIENT_IP, 
                             referralCode: null, referredBy: null, referralWallet: 0, totalReferralEarnings: 0,
-                            isPremium: false, premiumExpiration: null, activeOrders: [], pending_notifications: [],
-                            mining: { hasServer: false, serverId: null, isActive: false, nextTaxDue: 0 }
+                            isPremium: false, premiumTier: null, premiumExpiration: null, activeOrders: [], pending_notifications: [],
+                            mining: { hasServer: false, serverId: null, level: 1, yieldBuffer: 0, isActive: false, nextTaxDue: 0 },
+                            settings: { theme: 'default', animations: true }
                         };
                     }
                     setAllUsers(currentDb => {
@@ -436,35 +487,96 @@
 
             const upgradeToPremium = (planId) => {
                 if(!user) return {s:false, m:"Non connecté"};
-                const plan = PREMIUM_PLANS.find(p => p.id === planId);
+                const plan = PREMIUM_TIERS.find(p => p.id === planId);
                 if (!plan) return { s:false, m: "Plan invalide" };
                 
-                if (user.wallet.cash < plan.cost) return { s: false, m: "Solde insuffisant pour le paiement." };
+                if (user.wallet.cash < plan.price) return { s: false, m: "Solde insuffisant pour le paiement." };
 
                 const now = Date.now();
                 const newExpiration = (user.premiumExpiration && user.premiumExpiration > now) ? user.premiumExpiration + plan.duration : now + plan.duration;
                 
                 const newUser = { 
                     ...user, 
-                    isPremium: true, 
+                    isPremium: true,
+                    premiumTier: plan.id,
                     premiumExpiration: newExpiration, 
-                    wallet: { ...user.wallet, cash: user.wallet.cash - plan.cost + plan.reward } 
+                    wallet: { ...user.wallet, cash: user.wallet.cash - plan.price } 
                 };
                 
                 setUser(newUser); updateUserInDb(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
-                return {s:true, m:`Premium activé ! Paiement de $${plan.cost} accepté.`};
+                return {s:true, m:`Premium ${plan.name} activé ! Paiement de $${plan.price} accepté.`};
             };
 
-            const buyMiningServer = (serverId) => {
-                if(!user) return {s:false, m:"Non connecté"};
-                const server = MINING_SERVERS.find(s => s.id === serverId);
-                if (!server) return { s:false, m: "Serveur invalide" };
-                if (server.premium && !user.isPremium) return { s:false, m: "Réservé Premium" };
-                if (user.wallet.cash < server.cost) return { s:false, m: "Fonds insuffisants" };
-                if (user.mining?.hasServer) return { s:false, m: "Vous avez déjà un serveur." };
-                const newUser = { ...user, wallet: { ...user.wallet, cash: user.wallet.cash - server.cost }, mining: { hasServer: true, serverId: server.id, isActive: true, nextTaxDue: Date.now() + 24*60*60*1000 } };
+            const updateSettings = (newSettings) => {
+                if (!user) return;
+                const newUser = { ...user, settings: { ...user.settings, ...newSettings } };
                 setUser(newUser); updateUserInDb(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
-                return {s:true, m:`Serveur ${server.name} acquis !`};
+            };
+
+            const buyMiningServer = () => {
+                if(!user) return {s:false, m:"Non connecté"};
+                const level1 = MINING_LEVELS[1];
+                if (user.wallet.cash < level1.cost) return { s:false, m: "Fonds insuffisants" };
+                if (user.mining?.hasServer) return { s:false, m: "Vous avez déjà un serveur." };
+                
+                const newUser = { 
+                    ...user, 
+                    wallet: { ...user.wallet, cash: user.wallet.cash - level1.cost }, 
+                    mining: { hasServer: true, level: 1, yieldBuffer: 0, isActive: true, nextTaxDue: Date.now() + 24*60*60*1000 } 
+                };
+                setUser(newUser); updateUserInDb(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
+                return {s:true, m:`Serveur acquis !`};
+            };
+
+            const upgradeMiningServer = () => {
+                if(!user || !user.mining?.hasServer) return {s:false, m:"Aucun serveur"};
+                if(!user.isPremium) return {s:false, m:"Upgrade réservé aux membres Premium"};
+                
+                const nextLevel = user.mining.level + 1;
+                if(!MINING_LEVELS[nextLevel]) return {s:false, m:"Niveau max atteint"};
+                
+                const cost = MINING_LEVELS[nextLevel].cost;
+                if(user.wallet.cash < cost) return {s:false, m:"Fonds insuffisants"};
+
+                const newUser = {
+                    ...user,
+                    wallet: { ...user.wallet, cash: user.wallet.cash - cost },
+                    mining: { ...user.mining, level: nextLevel }
+                };
+                setUser(newUser); updateUserInDb(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
+                return {s:true, m:`Serveur amélioré au niveau ${nextLevel} !`};
+            };
+
+            const sellMiningServer = () => {
+                if(!user || !user.mining?.hasServer) return {s:false, m:"Aucun serveur"};
+                
+                const currentLevel = user.mining.level || 1;
+                const sellPrice = MINING_LEVELS[currentLevel].sellPrice;
+                
+                // Add sell price AND buffered yield to wallet
+                const totalReturn = sellPrice + (user.mining.yieldBuffer || 0);
+
+                const newUser = {
+                    ...user,
+                    wallet: { ...user.wallet, cash: user.wallet.cash + totalReturn },
+                    mining: { hasServer: false, level: 1, yieldBuffer: 0, isActive: false, nextTaxDue: 0 }
+                };
+                setUser(newUser); updateUserInDb(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
+                return {s:true, m:`Serveur vendu pour $${totalReturn.toLocaleString()} (Buffer inclus).`};
+            };
+
+            const claimMiningYield = () => {
+                if(!user || !user.mining?.hasServer) return {s:false, m:"Aucun serveur"};
+                const amount = user.mining.yieldBuffer || 0;
+                if(amount <= 0) return {s:false, m:"Rien à réclamer."};
+
+                const newUser = {
+                    ...user,
+                    wallet: { ...user.wallet, cash: user.wallet.cash + amount },
+                    mining: { ...user.mining, yieldBuffer: 0 }
+                };
+                setUser(newUser); updateUserInDb(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
+                return {s:true, m:`$${amount} ajoutés au portefeuille.`};
             };
 
             const payMiningTax = () => {
@@ -666,7 +778,7 @@
             };
 
             return (
-                <MarketContext.Provider value={{ market, user, transactions, allUsers, orders, isLoading, activePage, theme, isAdmin, adminLogs, isProfileOpen, uiNotifications, toggleProfile, adminLogin, toggleTheme, setActivePage, logout, buyAsset, sellAsset, transferCash, getPortfolioValue, applyReferralCode, claimReferralEarnings, generateMyReferralCode, upgradeToPremium, manageUserMoney, isChristmas, toggleChristmasMode, manageMarketAsset, buyMiningServer, payMiningTax, handleUserLogin, donate }}>
+                <MarketContext.Provider value={{ market, user, transactions, allUsers, orders, isLoading, activePage, theme, isAdmin, adminLogs, isProfileOpen, uiNotifications, toggleProfile, adminLogin, toggleTheme, setActivePage, logout, buyAsset, sellAsset, transferCash, getPortfolioValue, applyReferralCode, claimReferralEarnings, generateMyReferralCode, upgradeToPremium, manageUserMoney, isChristmas, toggleChristmasMode, manageMarketAsset, buyMiningServer, payMiningTax, handleUserLogin, donate, claimMiningYield, upgradeMiningServer, sellMiningServer, updateSettings }}>
                     {children}
                 </MarketContext.Provider>
             );
@@ -800,35 +912,82 @@
         };
 
         const ProfileModal = ({ isOpen, onClose }) => {
-            const { user, getPortfolioValue, setActivePage } = useMarket();
+            const { user, getPortfolioValue, setActivePage, updateSettings } = useMarket();
+            const [view, setView] = useState('PROFILE'); // PROFILE or SETTINGS
+
             if (!isOpen || !user) return null;
             const netWorth = getPortfolioValue();
             const avatar = user.discord ? user.discord.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png';
             const username = user.discord ? user.discord.username : 'User';
+            const tier = PREMIUM_TIERS.find(t => t.id === user.premiumTier);
+
+            const handleThemeChange = (newTheme) => {
+                updateSettings({ theme: newTheme });
+            };
+
+            const toggleAnimations = () => {
+                updateSettings({ animations: !user.settings?.animations });
+            };
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in p-4" onClick={onClose}>
-                    <div className="bg-white dark:bg-dark-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-slide-up border dark:border-dark-700 border-light-200 transition-theme" onClick={e => e.stopPropagation()}>
-                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-rose-500"><X /></button>
-                        <div className="flex flex-col items-center mb-6">
-                            <div className="relative">
-                                <img src={avatar} className={`w-20 h-20 rounded-full border-4 ${user.isPremium ? 'border-purple-500' : 'border-gold-500'} shadow-lg mb-3`} />
-                                {user.isPremium && <div className="absolute -top-2 -right-2 bg-purple-500 text-white rounded-full p-1"><Crown size={16} /></div>}
+                    <div className="bg-white dark:bg-dark-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-slide-up border dark:border-dark-700 border-light-200 transition-theme overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-rose-500 z-10"><X /></button>
+                        
+                        <div className="flex mb-6 border-b dark:border-dark-700">
+                            <button onClick={() => setView('PROFILE')} className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider ${view === 'PROFILE' ? 'text-gold-500 border-b-2 border-gold-500' : 'text-gray-500 hover:text-gray-300'}`}>Profil</button>
+                            {user.isPremium && <button onClick={() => setView('SETTINGS')} className={`flex-1 py-2 text-sm font-bold uppercase tracking-wider ${view === 'SETTINGS' ? 'text-purple-500 border-b-2 border-purple-500' : 'text-gray-500 hover:text-gray-300'}`}>Personnalisation</button>}
+                        </div>
+
+                        {view === 'PROFILE' ? (
+                            <>
+                                <div className="flex flex-col items-center mb-6">
+                                    <div className="relative">
+                                        <img src={avatar} className={`w-24 h-24 rounded-full border-4 ${user.isPremium ? (tier ? tier.color.split(' ')[1].replace('border-', 'border-') : 'border-purple-500') : 'border-gold-500'} shadow-lg mb-3 object-cover`} />
+                                        {user.isPremium && <div className={`absolute -top-2 -right-2 ${tier ? tier.badgeColor : 'bg-purple-500 text-white'} rounded-full p-2 shadow-lg border-2 border-white dark:border-dark-800`}>{tier && tier.icon === 'diamond' ? <Crown size={16} /> : <Trophy size={16} />}</div>}
+                                    </div>
+                                    <h2 className="text-2xl font-bold dark:text-white text-dark-900 flex items-center gap-2">{username}</h2>
+                                    {user.isPremium && tier && <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mt-2 ${tier.badgeColor}`}>{tier.name} Member</span>}
+                                    {!user.isPremium && <span className="text-xs text-gray-500 uppercase tracking-widest bg-gray-100 dark:bg-dark-900 px-2 py-1 rounded mt-2">Membre Standard</span>}
+                                    <div className="text-xs text-gray-500 font-mono mt-1">ID: {user.internalId}</div>
+                                </div>
+                                
+                                {!user.isPremium && ( <div className="mb-6"><button onClick={() => { setActivePage('PREMIUM'); onClose(); }} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all btn-hover"><Crown size={18} /> Voir les offres Premium</button></div> )}
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-dark-900 text-center"><p className="text-xs text-gray-500 uppercase">Valeur Nette</p><p className="text-xl font-bold text-gold-500">${netWorth.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+                                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-dark-900 text-center"><p className="text-xs text-gray-500 uppercase">Cash</p><p className="text-xl font-bold text-emerald-500">${user.wallet.cash.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+                                </div>
+                                <div className="mb-6 flex gap-2">
+                                     <button onClick={() => { setActivePage('WALLET'); onClose(); }} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-bold text-sm btn-hover"><Wallet className="inline mr-2" size={16}/> Portefeuille</button>
+                                     <button onClick={() => { setActivePage('TRANSFER'); onClose(); }} className="flex-1 bg-gray-200 dark:bg-dark-700 hover:bg-gray-300 dark:hover:bg-dark-600 dark:text-white py-3 rounded-lg font-bold text-sm btn-hover"><Send className="inline mr-2" size={16}/> Virements</button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="space-y-6 animate-fade-in">
+                                <div>
+                                    <h3 className="text-sm font-bold uppercase text-gray-500 mb-3">Thème Visuel</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={() => handleThemeChange('default')} className={`p-3 rounded-lg border text-sm font-bold transition-all ${user.settings?.theme === 'default' ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500' : 'border-gray-200 dark:border-dark-700 dark:text-white'}`}>Défaut</button>
+                                        {tier && (
+                                            <button onClick={() => handleThemeChange(tier.id)} className={`p-3 rounded-lg border text-sm font-bold transition-all ${user.settings?.theme === tier.id ? `border-current ${tier.color}` : 'border-gray-200 dark:border-dark-700 dark:text-white'}`}>
+                                                Thème {tier.name}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-2">Activez le thème exclusif correspondant à votre rang.</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold uppercase text-gray-500 mb-3">Interface</h3>
+                                    <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-dark-900">
+                                        <span className="text-sm font-bold dark:text-white">Animations UI</span>
+                                        <button onClick={toggleAnimations} className={`w-10 h-6 rounded-full p-1 transition-colors ${user.settings?.animations ? 'bg-emerald-500' : 'bg-gray-400'}`}>
+                                            <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${user.settings?.animations ? 'translate-x-4' : ''}`}></div>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <h2 className="text-2xl font-bold dark:text-white text-dark-900 flex items-center gap-2">{username} {user.isPremium && <span className="bg-purple-500 text-white text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">Premium</span>}</h2>
-                            <div className="text-xs text-gray-500 font-mono mt-1 bg-gray-100 dark:bg-dark-900 px-2 py-1 rounded">ID: {user.internalId}</div>
-                            {user.isPremium && user.premiumExpiration && ( <div className="text-xs text-purple-500 font-bold mt-1">Expire le: {new Date(user.premiumExpiration).toLocaleDateString()}</div> )}
-                            {!user.isPremium && <span className="text-xs text-gray-500 uppercase tracking-widest bg-gray-100 dark:bg-dark-900 px-2 py-1 rounded mt-2">Membre</span>}
-                        </div>
-                        {!user.isPremium && ( <div className="mb-6"><button onClick={() => { setActivePage('PREMIUM'); onClose(); }} className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all btn-hover"><Crown size={18} /> Voir les offres Premium</button></div> )}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-dark-900 text-center"><p className="text-xs text-gray-500 uppercase">Valeur Nette</p><p className="text-xl font-bold text-gold-500">${netWorth.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
-                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-dark-900 text-center"><p className="text-xs text-gray-500 uppercase">Cash</p><p className="text-xl font-bold text-emerald-500">${user.wallet.cash.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
-                        </div>
-                         <div className="mb-6 flex gap-2">
-                             <button onClick={() => { setActivePage('WALLET'); onClose(); }} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-bold text-sm btn-hover"><Wallet className="inline mr-2" size={16}/> Portefeuille</button>
-                             <button onClick={() => { setActivePage('TRANSFER'); onClose(); }} className="flex-1 bg-gray-200 dark:bg-dark-700 hover:bg-gray-300 dark:hover:bg-dark-600 dark:text-white py-3 rounded-lg font-bold text-sm btn-hover"><Send className="inline mr-2" size={16}/> Virements</button>
-                         </div>
+                        )}
                     </div>
                 </div>
             );
@@ -840,6 +999,7 @@
             if (!user) return null;
             const avatar = user.discord ? user.discord.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png';
             const username = user.discord ? user.discord.username : 'User';
+            const tier = PREMIUM_TIERS.find(t => t.id === user.premiumTier);
 
             return (
                 <>
@@ -847,11 +1007,14 @@
                     <div className="container mx-auto flex flex-wrap justify-between items-center gap-4">
                         <div className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => toggleProfile(true)}>
                             <div className="relative">
-                                <img src={avatar} alt="Avatar" className={`w-10 h-10 rounded-full border-2 ${user.isPremium ? 'border-purple-500' : 'border-gold-500'}`} />
+                                <img src={avatar} alt="Avatar" className={`w-10 h-10 rounded-full border-2 ${user.isPremium ? (tier ? tier.color.split(' ')[1].replace('border-','border-') : 'border-purple-500') : 'border-gold-500'} object-cover`} />
                                 <div className="absolute -bottom-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-dark-900"></div>
                             </div>
                             <div className="hidden sm:block">
-                                <div className="font-bold dark:text-white text-dark-900 text-sm flex items-center gap-1">{username} {user.isPremium && <Crown size={12} className="text-purple-500" />}</div>
+                                <div className="font-bold dark:text-white text-dark-900 text-sm flex items-center gap-1">
+                                    {username} 
+                                    {user.isPremium && <span className={`${tier ? tier.color.split(' ')[0] : 'text-purple-500'}`}>{tier && tier.icon === 'diamond' ? <Crown size={12}/> : <Trophy size={12}/>}</span>}
+                                </div>
                                 <div className="text-xs text-emerald-500 font-mono">${totalValue.toLocaleString()}</div>
                             </div>
                         </div>
@@ -860,7 +1023,6 @@
                              <button onClick={() => setActivePage('WALLET')} className="hover:text-gold-500 transition-colors flex items-center gap-2 btn-hover"><Wallet size={16}/> <span className="hidden sm:inline">Portefeuille</span></button>
                              <button onClick={() => setActivePage('TRANSFER')} className="hover:text-gold-500 transition-colors flex items-center gap-2 btn-hover"><Send size={16}/> <span className="hidden sm:inline">Virements</span></button>
                              <button onClick={() => setActivePage('REFERRAL')} className="hover:text-gold-500 transition-colors flex items-center gap-2 btn-hover"><Users size={16}/> <span className="hidden sm:inline">Affiliation</span></button>
-                             {!user.isPremium && ( <button onClick={() => toggleProfile(true)} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded shadow-lg shadow-purple-500/30 flex items-center gap-2 transition-transform hover:scale-105 animate-pulse-fast btn-hover"><Crown size={14}/> <span className="hidden md:inline">Devenir Premium</span><span className="md:hidden">Premium</span></button> )}
                          </div>
                         <div className="flex items-center gap-2">
                             <ThemeToggle />
@@ -1090,8 +1252,9 @@
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme pb-20 relative">
                     <DashboardNavBar />
                     {!user?.isPremium && (
-                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 text-center text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setActivePage('PREMIUM')}>
-                            <Crown size={14} className="inline mr-2" /> Débloquez les outils professionnels. Devenez Premium maintenant !
+                        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 text-center cursor-pointer hover:opacity-90 transition-opacity flex justify-center items-center gap-4" onClick={() => setActivePage('PREMIUM')}>
+                            <span className="font-bold text-sm"><Crown size={16} className="inline mr-2" /> Débloquez les outils professionnels.</span>
+                            <button className="bg-white text-purple-600 px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider hover:bg-gray-100 transition-colors">S'abonner</button>
                         </div>
                     )}
                     <div className="container mx-auto p-4 md:p-6 space-y-6">
@@ -1140,40 +1303,79 @@
         };
 
         const MiningPage = () => {
-             const { user, buyMiningServer, payMiningTax } = useMarket();
+             const { user, buyMiningServer, payMiningTax, claimMiningYield, upgradeMiningServer, sellMiningServer } = useMarket();
              const [msg, setMsg] = useState(null);
-             const handleBuy = (id) => { const res = buyMiningServer(id); setMsg(res); setTimeout(()=>setMsg(null), 3000); };
+             
+             const handleBuy = () => { const res = buyMiningServer(); setMsg(res); setTimeout(()=>setMsg(null), 3000); };
              const handleTax = () => { const res = payMiningTax(); setMsg(res); setTimeout(()=>setMsg(null), 3000); };
+             const handleClaim = () => { const res = claimMiningYield(); setMsg(res); setTimeout(()=>setMsg(null), 3000); };
+             const handleUpgrade = () => { const res = upgradeMiningServer(); setMsg(res); setTimeout(()=>setMsg(null), 3000); };
+             const handleSell = () => { if(confirm("Voulez-vous vraiment vendre votre serveur ?")) { const res = sellMiningServer(); setMsg(res); setTimeout(()=>setMsg(null), 3000); } };
+
              if(!user) return <div className="pt-24 text-center dark:text-white">Connectez-vous.</div>;
+
+             const minerLevel = user.mining?.level || 1;
+             const nextLevelCost = MINING_LEVELS[minerLevel + 1]?.cost;
 
              return (
                  <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme pt-20 pb-20">
                      <NavBar />
                      <div className="container mx-auto px-6 py-12">
                          <div className="text-center mb-12"><h1 className="text-4xl font-black dark:text-white mb-2">Mining Servers</h1><p className="text-gray-500">Générez des revenus passifs.</p></div>
+                         
                          {user.mining?.hasServer ? (
-                             <div className="max-w-xl mx-auto bg-dark-800 rounded-2xl p-8 border border-dark-700 shadow-2xl text-center">
-                                 <ServerIcon size={64} className={`mx-auto mb-4 ${user.mining.isActive ? 'text-emerald-500 animate-pulse' : 'text-rose-500'}`} />
-                                 <h2 className="text-2xl font-bold text-white mb-1">Votre Serveur</h2>
-                                 <div className={`inline-block px-3 py-1 rounded text-xs font-bold mb-6 ${user.mining.isActive ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>{user.mining.isActive ? 'ONLINE' : 'TAXE IMPAYÉE'}</div>
-                                 <div className="bg-dark-900 p-4 rounded mb-4 text-left text-sm text-gray-400"><div className="mb-2 font-bold text-white"><Info className="inline mr-2" size={14}/> Statut</div><p>Le paiement journalier de la taxe est obligatoire pour maintenir le serveur actif.</p></div>
-                                 <button onClick={handleTax} className="w-full bg-gold-500 hover:bg-gold-600 text-black font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"><Coins size={18}/> Payer Taxe Quotidienne</button>
-                                 {msg && <div className="mt-4 text-sm font-bold text-white">{msg.m}</div>}
+                             <div className="max-w-2xl mx-auto bg-dark-800 rounded-2xl p-8 border border-dark-700 shadow-2xl relative overflow-hidden">
+                                 <div className="absolute top-0 right-0 p-4 flex gap-2">
+                                     <button onClick={handleSell} className="text-xs text-rose-500 bg-rose-500/10 px-3 py-1 rounded hover:bg-rose-500 hover:text-white transition-colors">Vendre</button>
+                                 </div>
+                                 <div className="flex flex-col items-center justify-center mb-8">
+                                     <div className="relative">
+                                         <Cpu size={80} className={`text-emerald-500 ${user.mining.isActive ? 'animate-spin-slow' : 'opacity-50'}`} />
+                                         <div className="absolute inset-0 flex items-center justify-center">
+                                             <div className={`w-3 h-3 rounded-full ${user.mining.isActive ? 'bg-emerald-400 animate-ping' : 'bg-rose-500'}`}></div>
+                                         </div>
+                                     </div>
+                                     <h2 className="text-2xl font-bold text-white mt-4">{MINING_LEVELS[minerLevel].name}</h2>
+                                     <div className={`inline-block px-3 py-1 rounded text-xs font-bold mt-2 ${user.mining.isActive ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>{user.mining.isActive ? 'ONLINE' : 'TAXE IMPAYÉE'}</div>
+                                 </div>
+
+                                 <div className="grid grid-cols-2 gap-4 mb-6">
+                                     <div className="bg-dark-900 p-4 rounded-xl text-center">
+                                         <p className="text-xs text-gray-500 uppercase">Production</p>
+                                         <p className="text-xl font-mono text-white">${MINING_LEVELS[minerLevel].rate}/cycle</p>
+                                     </div>
+                                     <div className="bg-dark-900 p-4 rounded-xl text-center">
+                                         <p className="text-xs text-gray-500 uppercase">En attente</p>
+                                         <p className="text-xl font-mono text-gold-500">${(user.mining.yieldBuffer || 0).toLocaleString()}</p>
+                                     </div>
+                                 </div>
+
+                                 <div className="flex flex-col gap-3">
+                                     <button onClick={handleClaim} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 btn-hover"><DollarSign size={18}/> Réclamer Gains</button>
+                                     
+                                     {!user.mining.isActive && (
+                                         <button onClick={handleTax} className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 btn-hover"><Coins size={18}/> Payer Taxe ($500)</button>
+                                     )}
+
+                                     {nextLevelCost && (
+                                         <button onClick={handleUpgrade} disabled={!user.isPremium} className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 btn-hover">
+                                             <ServerIcon size={18}/> {user.isPremium ? `Améliorer (Niveau ${minerLevel + 1}) - $${nextLevelCost.toLocaleString()}` : "Amélioration réservée Premium"}
+                                         </button>
+                                     )}
+                                 </div>
+                                 
+                                 {msg && <div className={`mt-6 p-4 rounded-xl text-center font-bold ${msg.s ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>{msg.m}</div>}
                              </div>
                          ) : (
-                             <div className="grid md:grid-cols-3 gap-8">
-                                 {MINING_SERVERS.map((server) => (
-                                     <div key={server.id} className="bg-white dark:bg-dark-800 rounded-2xl p-6 border dark:border-dark-700 relative flex flex-col hover:border-gold-500 transition-colors shadow-xl">
-                                         {server.premium && <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg">Premium</div>}
-                                         <h3 className="text-xl font-bold dark:text-white mb-4">{server.name}</h3>
-                                         <div className="text-3xl font-black text-gold-500 mb-6">${server.cost.toLocaleString()}</div>
-                                         <div className="text-sm text-gray-500 mb-6 space-y-2"><div><CheckCircle className="inline text-emerald-500" size={14}/> Prod: Confidentielle</div><div><CheckCircle className="inline text-emerald-500" size={14}/> Taxe journalière requise</div></div>
-                                         <button onClick={() => handleBuy(server.id)} disabled={server.premium && !user.isPremium} className="mt-auto w-full py-3 rounded-xl font-bold bg-dark-900 text-white hover:bg-dark-700 transition-colors disabled:opacity-50">Acheter</button>
-                                     </div>
-                                 ))}
+                             <div className="max-w-md mx-auto bg-white dark:bg-dark-800 rounded-2xl p-8 border dark:border-dark-700 shadow-xl text-center">
+                                 <ServerIcon size={64} className="mx-auto text-gray-400 mb-6" />
+                                 <h3 className="text-2xl font-bold dark:text-white mb-2">Commencer le Mining</h3>
+                                 <p className="text-gray-500 mb-8">Achetez votre premier serveur pour générer des revenus passifs.</p>
+                                 <div className="text-3xl font-black text-gold-500 mb-8">$50,000</div>
+                                 <button onClick={handleBuy} className="w-full bg-dark-900 text-white hover:bg-dark-700 font-bold py-4 rounded-xl transition-all shadow-lg btn-hover">Acheter Serveur V1</button>
+                                 {msg && <div className="mt-4 text-rose-500 font-bold">{msg.m}</div>}
                              </div>
                          )}
-                         {msg && !user.mining?.hasServer && <div className="mt-8 text-center text-xl font-bold dark:text-white">{msg.m}</div>}
                      </div>
                  </div>
              );
@@ -1187,19 +1389,24 @@
                 <div className="min-h-screen bg-gray-50 dark:bg-dark-950 transition-theme pt-20 pb-20">
                     <NavBar />
                     <div className="container mx-auto px-6 py-12 text-center">
-                        <h1 className="text-4xl font-bold dark:text-white mb-4">Packs de Démarrage Premium</h1>
-                        <p className="text-gray-500 mb-12">Obtenez du capital virtuel immédiatement et débloquez les outils pro.</p>
-                        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-12">
-                            {PREMIUM_PLANS.map((plan, i) => (
-                                <div key={plan.id} className="bg-white dark:bg-dark-800 p-8 rounded-3xl shadow-xl border dark:border-dark-700 hover:scale-105 transition-transform">
-                                    <h3 className="text-2xl font-bold dark:text-white">{plan.label}</h3>
-                                    <div className="text-4xl font-black text-gold-500 my-4">+ ${plan.reward.toLocaleString()} <span className="text-sm text-gray-500">virtuels</span></div>
-                                    <ul className="text-left text-sm text-gray-500 space-y-2 mb-6"><li><CheckCircle className="inline text-purple-500"/> Outils de dessin sur graphiques</li><li><CheckCircle className="inline text-purple-500"/> Accès News Premium & Tendances</li><li><CheckCircle className="inline text-purple-500"/> Badge Exclusif</li></ul>
-                                    <button onClick={() => handleBuy(plan.id)} className="bg-purple-600 hover:bg-purple-700 text-white w-full py-3 rounded-xl font-bold">Activer (${plan.cost})</button>
+                        <h1 className="text-4xl font-bold dark:text-white mb-4">Offres Premium</h1>
+                        <p className="text-gray-500 mb-12">Débloquez fonctionnalités et confort. Pas d'avantage injuste.</p>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mt-12">
+                            {PREMIUM_TIERS.map((plan) => (
+                                <div key={plan.id} className={`bg-white dark:bg-dark-800 p-6 rounded-3xl shadow-xl border-2 hover:scale-105 transition-transform flex flex-col ${plan.color}`}>
+                                    <div className="mb-4 text-center"><span className="p-3 rounded-full bg-current/10 inline-block">{plan.icon === 'diamond' ? <Crown size={32} /> : <Trophy size={32} />}</span></div>
+                                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                                    <div className="text-3xl font-black mb-6">${plan.price} <span className="text-sm font-normal opacity-70">/mois</span></div>
+                                    <ul className="text-left text-sm space-y-3 mb-8 flex-1">
+                                        {plan.benefits.map((b, i) => (
+                                            <li key={i} className="flex items-start gap-2"><CheckCircle size={16} className="mt-0.5 shrink-0"/> <span>{b}</span></li>
+                                        ))}
+                                    </ul>
+                                    <button onClick={() => handleBuy(plan.id)} className="bg-current text-white w-full py-3 rounded-xl font-bold opacity-90 hover:opacity-100 transition-opacity shadow-lg">S'abonner</button>
                                 </div>
                             ))}
                         </div>
-                        {msg && <div className="mt-8 font-bold text-emerald-500">{msg}</div>}
+                        {msg && <div className="mt-8 font-bold text-emerald-500 text-xl">{msg}</div>}
                     </div>
                 </div>
             );
