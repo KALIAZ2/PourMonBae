@@ -74,6 +74,7 @@
       .reveal.delay-200 { transition-delay: 0.2s; }
       .reveal.delay-300 { transition-delay: 0.3s; }
       .animate-float { animation: float 6s ease-in-out infinite; }
+      .premium-gradient { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
     </style>
 </head>
 <body>
@@ -207,6 +208,12 @@
             const p1 = Math.floor(1000 + Math.random() * 9000);
             const p2 = Math.floor(1000 + Math.random() * 9000);
             return `XID-${p1}-${p2}`;
+        };
+
+        const isUserPremium = (u) => {
+            if (!u || !u.premium || !u.premium.active) return false;
+            if (new Date(u.premium.expiresAt) < new Date()) return false;
+            return true;
         };
         
         const SnowEffect = ({ enabled }) => {
@@ -386,13 +393,15 @@
                         if (!existingUserInDb.internalId) existingUserInDb.internalId = generateInternalId();
                         userState = { ...existingUserInDb, ...userData, lastLogin: now, ip: CLIENT_IP }; 
                         if(existingUserInDb.activeOrders) setOrders(existingUserInDb.activeOrders);
+                        if(!userState.premium) userState.premium = { active: false, expiresAt: null };
                     } else {
                         userState = { 
                             ...userData, 
                             internalId: generateInternalId(),
                             joinedAt: now, lastLogin: now, ip: CLIENT_IP, 
                             referralCode: null, referredBy: null, referralWallet: 0, totalReferralEarnings: 0,
-                            activeOrders: [], pending_notifications: []
+                            activeOrders: [], pending_notifications: [],
+                            premium: { active: false, expiresAt: null }
                         };
                     }
                     setAllUsers(currentDb => {
@@ -442,6 +451,40 @@
             };
 
             const updateUserInDb = (updatedUserObj) => { setAllUsers(prev => prev.map(u => u.id === updatedUserObj.id ? updatedUserObj : u)); };
+
+            const manageUserPremium = (targetUserId, months) => {
+                if (!isAdmin) return { s: false, m: "Non autorisé" };
+                const targetUser = allUsers.find(u => u.id === targetUserId);
+                if (!targetUser) return { s: false, m: "Utilisateur introuvable" };
+                
+                const now = new Date();
+                const currentExpiry = (targetUser.premium && targetUser.premium.active && targetUser.premium.expiresAt) 
+                    ? new Date(targetUser.premium.expiresAt) 
+                    : now;
+                
+                // If currently expired, start from now, else add to existing expiry
+                const startDate = currentExpiry < now ? now : currentExpiry;
+                const newExpiry = new Date(startDate);
+                newExpiry.setMonth(newExpiry.getMonth() + parseInt(months));
+                
+                const updatedUser = { 
+                    ...targetUser, 
+                    premium: { 
+                        active: true, 
+                        expiresAt: newExpiry.toISOString() 
+                    } 
+                };
+                
+                updateUserInDb(updatedUser);
+                if (user && user.id === targetUserId) { setUser(updatedUser); localStorage.setItem('xaluxa_user', JSON.stringify(updatedUser)); }
+                
+                const logEntry = { id: Date.now(), adminId: 'Admin', targetUserId: targetUser.id, targetUsername: targetUser.discord?.username || 'Unknown', action: 'PREMIUM_ADD', amount: months + ' Mois', balanceBefore: 0, balanceAfter: 0, reason: 'Admin Gift', timestamp: new Date().toLocaleString('fr-FR'), ip: '127.0.0.1' };
+                const newLogs = [logEntry, ...adminLogs];
+                setAdminLogs(newLogs);
+                localStorage.setItem('xaluxa_admin_logs', JSON.stringify(newLogs));
+                
+                return { s: true, m: `Premium activé pour ${months} mois.` };
+            };
 
             const manageUserMoney = (targetUserId, amount, type, reason) => {
                 if (!isAdmin) return { s: false, m: "Non autorisé" };
@@ -522,7 +565,8 @@
                 if(!user) return {s:false, m:'Connectez-vous'};
                 const asset = market.find(a => a.symbol === s);
                 if(user.wallet.cash < amt) return {s:false, m:'Fonds insuffisants'};
-                const feeRate = FEES.BUY;
+                // Premium check: 0 fees if premium
+                const feeRate = isUserPremium(user) ? 0 : FEES.BUY;
                 const tax = amt * feeRate; const netInvested = amt - tax; const qty = netInvested / asset.price;
                 const newOrders = [...orders];
                 if (autoOrders.length > 0) {
@@ -542,7 +586,8 @@
                 const asset = market.find(a => a.symbol === s);
                 if((user.wallet.assets[s]||0) < qty) return {s:false, m:'Pas assez d\'actifs'};
                 const grossVal = qty * asset.price;
-                const feeRate = FEES.SELL;
+                // Premium check: 0 fees if premium
+                const feeRate = isUserPremium(user) ? 0 : FEES.SELL;
                 const tax = grossVal * feeRate; const netVal = grossVal - tax;
                 const newUser = { ...user, wallet: { ...user.wallet, cash: user.wallet.cash + netVal, assets: {...user.wallet.assets, [s]: user.wallet.assets[s]-qty} } };
                 setUser(newUser); updateUserInDb(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
@@ -559,7 +604,9 @@
 
                 const newUser = {...user, wallet: {...user.wallet, cash: user.wallet.cash - amt}};
                 setUser(newUser); localStorage.setItem('xaluxa_user', JSON.stringify(newUser));
-                const feeRate = FEES.TRANSFER; const fee = amt * feeRate; const transferAmount = amt; 
+                // Premium check: 0 fees if premium
+                const feeRate = isUserPremium(user) ? 0 : FEES.TRANSFER; 
+                const fee = amt * feeRate; const transferAmount = amt; 
                 
                 setAllUsers(prev => prev.map(u => {
                     if (u.id === user.id) return newUser;
@@ -594,7 +641,7 @@
             };
 
             return (
-                <MarketContext.Provider value={{ market, user, transactions, allUsers, orders, isLoading, activePage, theme, isAdmin, adminLogs, isProfileOpen, uiNotifications, toggleProfile, adminLogin, toggleTheme, setActivePage, logout, buyAsset, sellAsset, transferCash, getPortfolioValue, applyReferralCode, claimReferralEarnings, generateMyReferralCode, manageUserMoney, isChristmas, toggleChristmasMode, manageMarketAsset, handleUserLogin, donate }}>
+                <MarketContext.Provider value={{ market, user, transactions, allUsers, orders, isLoading, activePage, theme, isAdmin, adminLogs, isProfileOpen, uiNotifications, toggleProfile, adminLogin, toggleTheme, setActivePage, logout, buyAsset, sellAsset, transferCash, getPortfolioValue, applyReferralCode, claimReferralEarnings, generateMyReferralCode, manageUserMoney, isChristmas, toggleChristmasMode, manageMarketAsset, handleUserLogin, donate, manageUserPremium }}>
                     {children}
                 </MarketContext.Provider>
             );
@@ -731,6 +778,7 @@
             const netWorth = getPortfolioValue();
             const avatar = user.discord ? user.discord.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png';
             const username = user.discord ? user.discord.username : 'User';
+            const isPremium = isUserPremium(user);
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in p-4" onClick={onClose}>
@@ -738,10 +786,11 @@
                         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-rose-500 z-10"><X /></button>
                         <div className="flex flex-col items-center mb-6">
                             <div className="relative">
-                                <img src={avatar} className={`w-24 h-24 rounded-full border-4 border-gold-500 shadow-lg mb-3 object-cover`} />
+                                <img src={avatar} className={`w-24 h-24 rounded-full border-4 ${isPremium ? 'border-gold-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'border-gray-200 dark:border-gray-700'} shadow-lg mb-3 object-cover`} />
+                                {isPremium && <div className="absolute -top-3 -right-3 text-gold-500 bg-white dark:bg-dark-800 rounded-full p-1"><Crown size={24} fill="#f59e0b" /></div>}
                             </div>
                             <h2 className="text-2xl font-bold dark:text-white text-dark-900 flex items-center gap-2">{username}</h2>
-                            <span className="text-xs text-gray-500 uppercase tracking-widest bg-gray-100 dark:bg-dark-900 px-2 py-1 rounded mt-2">Membre</span>
+                            <span className={`text-xs uppercase tracking-widest px-2 py-1 rounded mt-2 font-bold ${isPremium ? 'bg-gold-500 text-white' : 'bg-gray-100 dark:bg-dark-900 text-gray-500'}`}>{isPremium ? 'Premium Member' : 'Membre Standard'}</span>
                             <div className="text-xs text-gray-500 font-mono mt-1">ID: {user.internalId}</div>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -763,6 +812,7 @@
             if (!user) return null;
             const avatar = user.discord ? user.discord.avatar : 'https://cdn.discordapp.com/embed/avatars/0.png';
             const username = user.discord ? user.discord.username : 'User';
+            const isPremium = isUserPremium(user);
 
             return (
                 <>
@@ -770,12 +820,12 @@
                     <div className="container mx-auto flex flex-wrap justify-between items-center gap-4">
                         <div className="flex items-center gap-4 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => toggleProfile(true)}>
                             <div className="relative">
-                                <img src={avatar} alt="Avatar" className={`w-10 h-10 rounded-full border-2 border-gold-500 object-cover`} />
+                                <img src={avatar} alt="Avatar" className={`w-10 h-10 rounded-full border-2 ${isPremium ? 'border-gold-500' : 'border-gray-200'} object-cover`} />
                                 <div className="absolute -bottom-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-white dark:border-dark-900"></div>
                             </div>
                             <div className="hidden sm:block">
                                 <div className="font-bold dark:text-white text-dark-900 text-sm flex items-center gap-1">
-                                    {username} 
+                                    {username} {isPremium && <Crown size={12} className="text-gold-500" fill="#f59e0b"/>}
                                 </div>
                                 <div className="text-xs text-emerald-500 font-mono">${totalValue.toLocaleString()}</div>
                             </div>
@@ -821,6 +871,7 @@
             const { theme, user } = useMarket();
             const isMobile = useMediaQuery("(max-width: 768px)");
             const isDark = theme === 'dark';
+            const isPremium = isUserPremium(user);
             
             const data = asset.history.map(h => ({
                 ...h,
@@ -844,6 +895,11 @@
                 setDrawMode(false);
             };
 
+            const toggleDraw = () => {
+                if (!isPremium) return alert("Fonctionnalité réservée aux membres Premium !");
+                setDrawMode(!drawMode);
+            };
+
             return (
                 <div className="bg-white dark:bg-dark-800 rounded-xl p-4 md:p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 md:h-96 flex flex-col transition-theme w-full reveal delay-100 relative group">
                     <div className="flex justify-between items-end mb-4">
@@ -855,7 +911,11 @@
                     </div>
 
                     <div className="absolute top-4 right-4 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={()=>setDrawMode(!drawMode)} className={`p-2 text-xs rounded font-bold shadow transition-colors ${drawMode?'bg-purple-600 text-white':'bg-gray-200 dark:bg-dark-600 dark:text-gray-400'}`} title="Tracer ligne"><Edit2 size={14}/></button>
+                        <div className="relative group/btn">
+                            <button onClick={toggleDraw} className={`p-2 text-xs rounded font-bold shadow transition-colors flex items-center gap-1 ${drawMode?'bg-purple-600 text-white': isPremium ? 'bg-gray-200 dark:bg-dark-600 dark:text-gray-400' : 'bg-gray-300 dark:bg-dark-900 text-gray-500 cursor-not-allowed'}`} title={isPremium ? "Tracer ligne" : "Premium Only"}>
+                                <Edit2 size={14}/> {!isPremium && <Lock size={10} />}
+                            </button>
+                        </div>
                         {lines.length > 0 && <button onClick={()=>setLines([])} className="p-2 text-xs rounded font-bold bg-rose-500 text-white shadow" title="Effacer lignes"><Trash size={14}/></button>}
                     </div>
 
@@ -888,6 +948,8 @@
             const [useAuto, setUseAuto] = useState(false);
             const [tp, setTp] = useState('');
             const [sl, setSl] = useState('');
+            const isPremium = isUserPremium(user);
+            const fees = isPremium ? 0 : 2;
 
             const exec = (type) => {
                 if(!user) return setMsg({t:'err', m:'Non connecté'});
@@ -895,6 +957,7 @@
                 if(isNaN(val) || val <= 0) return setMsg({t:'err', m:'Montant invalide'});
                 let orders = [];
                 if (type === 'BUY' && useAuto) {
+                    if(!isPremium) return setMsg({t:'err', m:'Fonction Auto-Trade réservée aux Premium'});
                     if (tp) orders.push({ type: 'TP', percent: parseFloat(tp) });
                     if (sl) orders.push({ type: 'SL', percent: parseFloat(sl) });
                 }
@@ -903,18 +966,26 @@
                 if(res.s) { setAmt(''); setTp(''); setSl(''); }
                 setTimeout(() => setMsg(null), 3000);
             };
-            const fees = 2; // Standard fees for everyone
+
+            const toggleAuto = (e) => {
+                 if(!isPremium) {
+                     setMsg({t:'err', m:'Fonctionnalité Premium requise'});
+                     setTimeout(()=>setMsg(null), 2000);
+                     return;
+                 }
+                 setUseAuto(e.target.checked);
+            };
 
             return (
                 <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-full flex flex-col transition-theme reveal delay-200">
                     <h3 className="text-lg font-bold dark:text-gray-200 text-gray-700 mb-4 uppercase tracking-wide flex justify-between items-center">Passer un ordre</h3>
                     <div className="flex-1 flex flex-col gap-4">
                         <input type="number" placeholder="Quantité ($)" className="w-full bg-gray-100 dark:bg-dark-900 p-4 rounded-lg outline-none focus:ring-2 ring-gold-500 dark:text-white transition-all" value={amt} onChange={e => setAmt(e.target.value)} />
-                        <div className={`p-4 rounded-lg border transition-all bg-gray-100 dark:bg-dark-900 border-transparent opacity-100`}>
+                        <div className={`p-4 rounded-lg border transition-all ${isPremium ? 'bg-gray-100 dark:bg-dark-900 border-transparent' : 'bg-gray-50 dark:bg-dark-900/50 border-gray-200 dark:border-dark-700 opacity-60'}`}>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="flex items-center gap-2 text-xs font-bold uppercase cursor-pointer select-none">
-                                    <input type="checkbox" className="w-4 h-4 accent-gold-500" checked={useAuto} onChange={e => { setUseAuto(e.target.checked); }} />
-                                    <span className="text-gray-500">Auto Take-Profit / Stop-Loss</span>
+                                <label className={`flex items-center gap-2 text-xs font-bold uppercase cursor-pointer select-none ${!isPremium && 'cursor-not-allowed'}`}>
+                                    <input type="checkbox" className="w-4 h-4 accent-gold-500" checked={useAuto} onChange={toggleAuto} disabled={!isPremium} />
+                                    <span className="text-gray-500 flex items-center gap-2">Auto Take-Profit {!isPremium && <Lock size={12}/>}</span>
                                 </label>
                             </div>
                             {useAuto && (
@@ -924,7 +995,7 @@
                                 </div>
                             )}
                         </div>
-                        <div className="text-xs text-gray-500 text-center italic">Frais : <span className="text-rose-500 font-bold">{fees}%</span></div>
+                        <div className="text-xs text-gray-500 text-center italic">Frais : {isPremium ? <span className="text-gold-500 font-bold">0% (Premium)</span> : <span className="text-rose-500 font-bold">{fees}%</span>}</div>
                         <div className="grid grid-cols-2 gap-3 mt-auto"><button onClick={() => exec('BUY')} className="bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-bold transition-all btn-hover">ACHETER</button><button onClick={() => exec('SELL')} className="bg-rose-500 hover:bg-rose-600 text-white py-3 rounded-lg font-bold transition-all btn-hover">VENDRE</button></div>
                         {msg && <div className={`p-2 rounded text-center text-sm ${msg.t==='suc'?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700'}`}>{msg.m}</div>}
                     </div>
@@ -958,6 +1029,8 @@
         };
 
         const NewsFeed = () => {
+            const { user } = useMarket();
+            const isPremium = isUserPremium(user);
             const futureNews = [
                 { week: "Semaine du 27 Octobre 2025", title: "Régulation des Crypto-Actifs", desc: "Le vote parlementaire sur la fiscalité des actifs numériques est prévu pour vendredi." },
                 { week: "Semaine du 3 Novembre 2025", title: "Mise à jour Réseau BASTRUM", desc: "Le protocole Bastrum prévoit une migration majeure de ses nœuds validateurs." },
@@ -965,21 +1038,48 @@
                 { week: "Semaine du 17 Novembre 2025", title: "Lancement ATERIS V2", desc: "La nouvelle version de la blockchain Ateris sera déployée sur le mainnet." }
             ];
 
+            const currentNews = [
+                 { week: "Aujourd'hui", title: "Flash Market", desc: "Le marché est stable avec une légère tendance haussière sur Ateris." },
+                 { week: "Aujourd'hui", title: "Volumes", desc: "Les volumes d'échange sont modérés en cette session asiatique." }
+            ];
+
+            const displayNews = isPremium ? futureNews : currentNews;
+
             return (
-                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme reveal delay-200">
-                    <div className="flex items-center gap-2 mb-6">
+                <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-light-200 h-80 flex flex-col transition-theme reveal delay-200 relative overflow-hidden">
+                    <div className="flex items-center gap-2 mb-6 relative z-10">
                         <Calendar className="text-gold-500" size={20} />
-                        <h3 className="text-lg font-bold dark:text-gray-200 text-gray-700 uppercase tracking-wide">Actualités Futures</h3>
+                        <h3 className="text-lg font-bold dark:text-gray-200 text-gray-700 uppercase tracking-wide">{isPremium ? "Actualités Futures (Premium)" : "Actualités Instantanées"}</h3>
                     </div>
-                    <div className="flex-1 overflow-y-auto pr-2 relative">
+                    
+                    {!isPremium && (
+                        <div className="absolute inset-x-0 bottom-0 top-16 z-20 flex flex-col items-center justify-center text-center p-4">
+                             <div className="absolute inset-0 bg-white/60 dark:bg-dark-900/60 backdrop-blur-sm"></div>
+                             <div className="relative z-30 max-w-xs">
+                                 <div className="w-12 h-12 bg-gold-500 rounded-full flex items-center justify-center text-white mx-auto mb-3 shadow-lg"><Lock size={20}/></div>
+                                 <h4 className="font-bold text-dark-900 dark:text-white mb-2">Accès Futur Restreint</h4>
+                                 <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">Passez Premium pour voir les prédictions et actualités à venir.</p>
+                             </div>
+                        </div>
+                    )}
+
+                    <div className="flex-1 overflow-y-auto pr-2 relative z-10">
                         <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-dark-700"></div>
                         <div className="space-y-6 pl-8">
-                            {futureNews.map((news, i) => (
+                            {displayNews.map((news, i) => (
                                 <div key={i} className="relative">
                                     <div className="absolute -left-[29px] top-1 w-4 h-4 rounded-full bg-gold-500 border-2 border-white dark:border-dark-800 z-10"></div>
                                     <div className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">{news.week}</div>
                                     <h4 className="text-sm font-bold dark:text-white text-dark-900 mb-1">{news.title}</h4>
                                     <p className="text-xs text-gray-500 leading-relaxed">{news.desc}</p>
+                                </div>
+                            ))}
+                            {!isPremium && futureNews.map((news, i) => (
+                                <div key={'fake'+i} className="relative opacity-20 filter blur-sm select-none">
+                                    <div className="absolute -left-[29px] top-1 w-4 h-4 rounded-full bg-gray-400 border-2 border-white dark:border-dark-800 z-10"></div>
+                                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Semaine prochaine</div>
+                                    <h4 className="text-sm font-bold dark:text-white text-dark-900 mb-1">Contenu Premium Masqué</h4>
+                                    <p className="text-xs text-gray-500 leading-relaxed">Cette information est réservée aux membres ayant un accès Premium actif.</p>
                                 </div>
                             ))}
                         </div>
@@ -1170,7 +1270,8 @@
                 </div>
             );
 
-            const fees = FEES.TRANSFER * 100;
+            const isPremium = isUserPremium(user);
+            const fees = isPremium ? 0 : FEES.TRANSFER * 100;
             const handleTransfer = (e) => { e.preventDefault(); const val = parseFloat(amount); if(!dest || isNaN(val)) return; const res = transferCash(dest, val); setMsg(res); if(res.s) { setAmount(''); setDest(''); } };
 
             return (
@@ -1181,7 +1282,7 @@
                             <h1 className="text-3xl font-bold mb-6 flex items-center gap-3 dark:text-white text-dark-900"><Send className="text-gold-500" /> Virement Sécurisé</h1>
                             <form onSubmit={handleTransfer} className="space-y-6">
                                 <div><label className="block text-sm font-bold text-gray-500 mb-2">ID Destinataire (Interne)</label><input type="text" value={dest} onChange={e => setDest(e.target.value)} className="w-full bg-gray-100 dark:bg-dark-900 p-4 rounded-lg outline-none focus:ring-2 ring-gold-500 dark:text-white" placeholder="Ex: XID-1234-5678" /></div>
-                                <div><label className="block text-sm font-bold text-gray-500 mb-2">Montant ($)</label><input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-gray-100 dark:bg-dark-900 p-4 rounded-lg outline-none focus:ring-2 ring-gold-500 dark:text-white" placeholder="0.00" /><p className="text-xs text-gray-400 mt-2 italic">* <span className="text-rose-500 font-bold">{fees}% de frais</span> (impôt système) déduits.</p></div>
+                                <div><label className="block text-sm font-bold text-gray-500 mb-2">Montant ($)</label><input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-gray-100 dark:bg-dark-900 p-4 rounded-lg outline-none focus:ring-2 ring-gold-500 dark:text-white" placeholder="0.00" /><p className="text-xs text-gray-400 mt-2 italic">* {isPremium ? <span className="text-gold-500 font-bold">0% de frais (Premium)</span> : <span className="text-rose-500 font-bold">{fees}% de frais</span>}</p></div>
                                 <button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg btn-hover">Confirmer</button>
                                 {msg && ( <div className={`p-4 rounded-xl text-center font-bold ${msg.s ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>{msg.m}</div> )}
                             </form>
@@ -1280,10 +1381,11 @@
         };
 
         const AdminDashboard = () => {
-            const { isAdmin, allUsers, setActivePage, manageUserMoney, adminLogs, manageMarketAsset, market } = useMarket();
+            const { isAdmin, allUsers, setActivePage, manageUserMoney, adminLogs, manageMarketAsset, market, manageUserPremium } = useMarket();
             const [activeTab, setActiveTab] = useState('USERS');
             const [search, setSearch] = useState('');
             const [modal, setModal] = useState({ open: false, type: 'ADD', user: null });
+            const [premiumModal, setPremiumModal] = useState({ open: false, user: null, duration: 1 });
             const [amount, setAmount] = useState('');
             const [reason, setReason] = useState('');
             const [msg, setMsg] = useState(null);
@@ -1291,8 +1393,12 @@
 
             if(!isAdmin) { setTimeout(() => setActivePage('ADMIN_LOGIN'), 0); return null; }
             const filteredUsers = allUsers.filter(u => (u.discord?.username || '').toLowerCase().includes(search.toLowerCase()) || u.id.includes(search));
+            
             const openModal = (type, user) => { setModal({ open: true, type, user }); setAmount(''); setReason(''); setMsg(null); };
+            const openPremiumModal = (user) => { setPremiumModal({ open: true, user, duration: 1 }); setMsg(null); };
+
             const handleTransaction = (e) => { e.preventDefault(); const val = parseFloat(amount); if (isNaN(val) || val <= 0) return setMsg({s:false, m:"Montant invalide"}); if (!reason) return setMsg({s:false, m:"Motif requis"}); const res = manageUserMoney(modal.user.id, val, modal.type, reason); setMsg(res); if (res.s) { setTimeout(() => setModal({...modal, open: false}), 1500); } };
+            const handlePremiumSubmit = (e) => { e.preventDefault(); const res = manageUserPremium(premiumModal.user.id, premiumModal.duration); setMsg(res); if (res.s) { setTimeout(() => setPremiumModal({...premiumModal, open: false}), 1500); } };
             const handleAssetSubmit = () => { manageMarketAsset('ADD', { ...assetForm, price: parseFloat(assetForm.price) }); setAssetForm({ symbol: '', name: '', price: '' }); };
 
             return (
@@ -1310,13 +1416,14 @@
                         {activeTab === 'USERS' && (
                             <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl border dark:border-dark-700 border-gray-200 p-6 animate-fade-in">
                                 <div className="mb-4"><input type="text" placeholder="Rechercher..." className="w-full md:w-1/3 bg-gray-100 dark:bg-dark-900 p-3 rounded-lg border border-transparent focus:border-rose-500 outline-none dark:text-white" value={search} onChange={e => setSearch(e.target.value)}/></div>
-                                <div className="overflow-x-auto"><table className="w-full text-left text-sm text-gray-500 dark:text-gray-400"><thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-dark-900 dark:text-gray-400"><tr><th className="px-6 py-3">Utilisateur</th><th className="px-6 py-3">Solde</th><th className="px-6 py-3 text-right">Actions</th></tr></thead><tbody>{filteredUsers.map((u, i) => ( <tr key={i} className="border-b dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"><td className="px-6 py-4 flex items-center gap-3"><img src={u.discord?.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'} className="w-10 h-10 rounded-full" /><div><div className="font-bold dark:text-white text-base">{u.discord?.username || 'Unknown'}</div><div className="text-xs text-gray-500 font-mono">{u.id}</div></div></td><td className="px-6 py-4"><span className="font-mono text-emerald-500 font-bold text-lg">${u.wallet.cash.toLocaleString()}</span></td><td className="px-6 py-4 text-right space-x-2"><button onClick={() => openModal('ADD', u)} className="bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-lg shadow transition btn-hover"><Plus size={16}/></button><button onClick={() => openModal('REMOVE', u)} className="bg-rose-500 hover:bg-rose-600 text-white p-2 rounded-lg shadow transition btn-hover"><Minus size={16}/></button></td></tr> ))}</tbody></table></div>
+                                <div className="overflow-x-auto"><table className="w-full text-left text-sm text-gray-500 dark:text-gray-400"><thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-dark-900 dark:text-gray-400"><tr><th className="px-6 py-3">Utilisateur</th><th className="px-6 py-3">Solde</th><th className="px-6 py-3">Status</th><th className="px-6 py-3 text-right">Actions</th></tr></thead><tbody>{filteredUsers.map((u, i) => ( <tr key={i} className="border-b dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"><td className="px-6 py-4 flex items-center gap-3"><img src={u.discord?.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'} className="w-10 h-10 rounded-full" /><div><div className="font-bold dark:text-white text-base">{u.discord?.username || 'Unknown'}</div><div className="text-xs text-gray-500 font-mono">{u.id}</div></div></td><td className="px-6 py-4"><span className="font-mono text-emerald-500 font-bold text-lg">${u.wallet.cash.toLocaleString()}</span></td><td className="px-6 py-4">{isUserPremium(u) ? <span className="text-gold-500 font-bold flex items-center gap-1"><Crown size={14}/> Premium</span> : <span className="text-gray-500">Standard</span>}</td><td className="px-6 py-4 text-right space-x-2"><button onClick={() => openModal('ADD', u)} className="bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-lg shadow transition btn-hover"><Plus size={16}/></button><button onClick={() => openModal('REMOVE', u)} className="bg-rose-500 hover:bg-rose-600 text-white p-2 rounded-lg shadow transition btn-hover"><Minus size={16}/></button><button onClick={() => openPremiumModal(u)} className="bg-gold-500 hover:bg-gold-600 text-white p-2 rounded-lg shadow transition btn-hover" title="Gérer Premium"><Crown size={16}/></button></td></tr> ))}</tbody></table></div>
                             </div>
                         )}
                         {activeTab === 'LOGS' && ( <div className="bg-white dark:bg-dark-800 rounded-xl shadow-xl border dark:border-dark-700 border-gray-200 p-6 animate-fade-in"><div className="overflow-x-auto"><table className="w-full text-left text-sm text-gray-500 dark:text-gray-400"><thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-dark-900 dark:text-gray-400"><tr><th className="px-6 py-3">Date</th><th className="px-6 py-3">Action</th><th className="px-6 py-3">Cible</th><th className="px-6 py-3">Montant</th></tr></thead><tbody>{adminLogs.map((log, i) => (<tr key={i} className="border-b dark:border-dark-700 hover:bg-gray-50 dark:hover:bg-dark-700"><td className="px-6 py-4">{log.timestamp}</td><td className="px-6 py-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.action === 'ADD' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{log.action}</span></td><td className="px-6 py-4 dark:text-white">{log.targetUsername}</td><td className="px-6 py-4 font-mono font-bold">${log.amount.toLocaleString()}</td></tr>))}</tbody></table></div></div> )}
                         {activeTab === 'MARKET' && ( <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-xl border dark:border-dark-700 border-gray-200 animate-fade-in"><div className="flex gap-4 mb-6"><input placeholder="Symbole (BTC)" value={assetForm.symbol} onChange={e=>setAssetForm({...assetForm, symbol:e.target.value})} className="bg-gray-100 dark:bg-dark-900 p-2 rounded dark:text-white w-24" /><input placeholder="Nom" value={assetForm.name} onChange={e=>setAssetForm({...assetForm, name:e.target.value})} className="bg-gray-100 dark:bg-dark-900 p-2 rounded dark:text-white flex-1" /><input placeholder="Prix" type="number" value={assetForm.price} onChange={e=>setAssetForm({...assetForm, price:e.target.value})} className="bg-gray-100 dark:bg-dark-900 p-2 rounded dark:text-white w-32" /><button onClick={handleAssetSubmit} className="bg-emerald-500 text-white px-4 rounded font-bold hover:bg-emerald-600 transition">Ajouter</button></div><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{market.map(m => ( <div key={m.symbol} className="p-4 border dark:border-dark-700 rounded-lg flex justify-between items-center dark:text-white bg-gray-50 dark:bg-dark-900"><div><span className="font-bold">{m.name}</span> <span className="text-xs text-gray-500">({m.symbol})</span></div><div className="flex gap-2"><button onClick={()=>manageMarketAsset('TOGGLE', m.symbol)} className={`text-xs px-2 py-1 rounded font-bold ${m.active?'bg-emerald-500 text-white':'bg-gray-500 text-white'}`}>{m.active?'ON':'OFF'}</button><button onClick={()=>manageMarketAsset('DELETE', m.symbol)} className="text-rose-500 hover:bg-rose-500/10 p-1 rounded"><Trash size={16}/></button></div></div> ))}</div></div> )}
                     </div>
                     {modal.open && ( <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in"><div className="bg-white dark:bg-dark-800 rounded-xl p-6 w-full max-w-sm shadow-2xl relative animate-scale-in border dark:border-dark-700"><h3 className="text-xl font-bold mb-4 dark:text-white">{modal.type === 'ADD' ? 'Ajouter' : 'Retirer'} Argent</h3><form onSubmit={handleTransaction} className="space-y-4"><input type="number" className="w-full bg-gray-100 dark:bg-dark-900 p-3 rounded-lg dark:text-white" placeholder="Montant" value={amount} onChange={e => setAmount(e.target.value)} autoFocus /><input type="text" className="w-full bg-gray-100 dark:bg-dark-900 p-3 rounded-lg dark:text-white" placeholder="Motif" value={reason} onChange={e => setReason(e.target.value)} /><div className="grid grid-cols-2 gap-3"><button type="button" onClick={() => setModal({...modal, open: false})} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-dark-700 dark:text-white font-bold">Annuler</button><button className="px-4 py-2 rounded-lg bg-emerald-500 text-white font-bold">Confirmer</button></div></form></div></div> )}
+                    {premiumModal.open && ( <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in"><div className="bg-white dark:bg-dark-800 rounded-xl p-6 w-full max-w-sm shadow-2xl relative animate-scale-in border dark:border-dark-700"><h3 className="text-xl font-bold mb-4 dark:text-white flex items-center gap-2"><Crown className="text-gold-500"/> Gestion Premium</h3><form onSubmit={handlePremiumSubmit} className="space-y-4"><div className="dark:text-white mb-2 font-bold">{premiumModal.user.discord?.username}</div><div className="space-y-2"><label className="block text-sm dark:text-gray-400">Durée</label><select className="w-full bg-gray-100 dark:bg-dark-900 p-3 rounded-lg dark:text-white border border-transparent focus:border-gold-500 outline-none" value={premiumModal.duration} onChange={e => setPremiumModal({...premiumModal, duration: e.target.value})}><option value={1}>1 Mois</option><option value={3}>3 Mois</option><option value={6}>6 Mois</option></select></div><div className="grid grid-cols-2 gap-3 mt-4"><button type="button" onClick={() => setPremiumModal({...premiumModal, open: false})} className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-dark-700 dark:text-white font-bold">Annuler</button><button className="px-4 py-2 rounded-lg bg-gold-500 text-white font-bold">Activer</button></div></form>{msg && <div className={`mt-2 p-2 rounded text-center text-sm font-bold ${msg.s ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>{msg.m}</div>}</div></div> )}
                 </div>
             );
         };
